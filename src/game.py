@@ -1,3 +1,4 @@
+import socket
 import pygame
 import socketio
 import menue
@@ -14,9 +15,8 @@ font = pygame.font.SysFont('Georgia', 24, bold=False)
 connectmenue = True
 menueactive = False
 
-sio = socketio.Client()
+sio = socketio.Client(logger=True, engineio_logger=True)
 
-sio.connect('http://3.71.101.250:3000/')
 @sio.event
 def connect():
     print("I'm connected!")
@@ -44,7 +44,20 @@ while run:
 
         if connect_button.button.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0] == True:
             connectmenue = False
-            menueactive = True
+            try:
+                sio.connect('http://3.71.101.250:3000/')
+            except Exception as ex:
+                print("Verbindungsfehler")
+
+            if sio.connected:
+                menueactive = True
+            else:
+                screen.fill('light blue')
+                status = font.render('Connection failed ', True, 'red')
+                screen.blit(status, (connect_button.button.midleft[0], connect_button.button.midleft[1] - 15))
+                pygame.display.flip()
+                pygame.time.delay(3000)
+                connectmenue = True
     if menueactive:
         status = font.render('Connected to Server ', True, 'black')
         screen.blit(status, (0,0))
