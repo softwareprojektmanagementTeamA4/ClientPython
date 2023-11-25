@@ -7,11 +7,10 @@ class Button():
         self.x = x
         self.y = y
         self.screen = screen
-        self.button = pygame.rect.Rect(x,y,150,60)
-        self.button.midbottom = (x,y)
+        self.button = pygame.rect.Rect(x,y,120,40)
 
     def draw(self):
         btn = pygame.draw.rect(self.screen, 'light gray', self.button, 0, 5)
         btnrand = pygame.draw.rect(self.screen, 'black', self.button, 5, 5)
         surf = self.font.render(self.text, True, 'black')
-        self.screen.blit(surf, (self.button.midleft[0] + 25, self.button.midleft[1] - 15))
+        self.screen.blit(surf, (self.x + 10, self.y + 5))
