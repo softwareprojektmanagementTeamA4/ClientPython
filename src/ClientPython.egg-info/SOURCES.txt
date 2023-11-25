@@ -1,0 +1,8 @@
+README.md
+setup.py
+src/game.py
+src/ClientPython.egg-info/PKG-INFO
+src/ClientPython.egg-info/SOURCES.txt
+src/ClientPython.egg-info/dependency_links.txt
+src/ClientPython.egg-info/requires.txt
+src/ClientPython.egg-info/top_level.txt

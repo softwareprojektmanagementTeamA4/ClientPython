@@ -1,0 +1,8 @@
+Metadata-Version: 2.1
+Name: ClientPython
+Version: 0.1
+Home-page: 
+Author: David Stevic
+Author-email: 
+Requires-Dist: pygame
+Requires-Dist: python-socketio[client]
