@@ -8,7 +8,7 @@ setup(
     version='0.1',
     packages=[''],
     package_dir={'': 'src'},
-    install_requires=['pygame', 'python-socketio[client]'],
+    install_requires=['pygame', 'python-socketio[client]', '[json]'],
     url='',
     license='',
     author='David Stevic',
