@@ -18,7 +18,7 @@ connectEnter = False
 
 sio = socketio.Client()
 username = None
-
+usernames = None
 @sio.event
 def connect():
     print("I'm connected! ")
@@ -37,9 +37,10 @@ def disconnect():
 
 @sio.event()
 def playersConnected(data):
-    playerinfo = json.load(data)
-    online = font.render(playerinfo['usernames'] + ' Online', True, 'green')
-    screen.blit(online, (screen.get_rect().x, screen.get_rect().y + 25))
+    print("PLAYER CONNECTED")
+    global usernames
+    usernames = data['usernames']
+    print('Updated Users:', usernames)
 
 username_input_box = menue.TextInputBox(WIDTH/2, (HEIGHT/2) - 70, 400, font)
 input_group = pygame.sprite.Group(username_input_box)
@@ -65,6 +66,7 @@ while run:
             username = username_input_box.text
             try:
                 sio.connect('http://3.71.101.250:3000/', headers={'username': username})
+                pygame.time.delay(1000)
             except Exception as ex:
                 print("Verbindungsfehler")
 
@@ -77,11 +79,15 @@ while run:
                 pygame.display.flip()
                 pygame.time.delay(3000)
                 connectmenue = True
+                username_input_box.enterpressed = False
     if menueactive:
         status = font.render('Connected to Server ', True, 'black')
         screen.blit(status, (0,0))
-        online = font.render(username + ' Online', True, 'green')
-        screen.blit(online, (screen.get_rect().x, screen.get_rect().y + 25))
+        i = 25
+        for users in usernames:
+            online = font.render(users + ' Online', True, 'green')
+            screen.blit(online, (0, i))
+            i = i*2
 
         start_button = menue.Button('Start', WIDTH/2, (HEIGHT/2) - 65, screen)
         start_button.draw()
