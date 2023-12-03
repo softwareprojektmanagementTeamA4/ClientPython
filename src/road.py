@@ -2,8 +2,8 @@ import pygame
 import math
 import sys
 
-HEIGHT = 340
-WIDTH = 480
+HEIGHT = 510
+WIDTH = 720
 
 pygame.init()
 
@@ -17,18 +17,20 @@ start_pos = 0.0
 distance = 0.0
 clock = pygame.time.Clock()
 sky_image = pygame.transform.scale(pygame.image.load("media/sky.PNG"), (WIDTH, HEIGHT/2))
-sky_image2 = pygame.transform.scale(pygame.image.load("media/sky.PNG"), (WIDTH, HEIGHT/2))
+sky_image2 = pygame.transform.flip(sky_image, True, False)
 sky_rect = sky_image.get_rect(bottomleft=(0, HEIGHT/2))
-sky_rect2 = sky_image2.get_rect(bottomright=(1, HEIGHT/2))
+sky_rect2 = sky_image2.get_rect(bottomright=(0, HEIGHT/2))
+move = math.ceil(WIDTH*0.02)
 
 
 def oncreation(surface, time=3.5):
     global distance
-    surface.fill('black')
     surface.blit(sky_image2, sky_rect2)
     surface.blit(sky_image, sky_rect)
 
     if pygame.key.get_pressed()[pygame.K_w]:
+        sky_rect.x += move
+        sky_rect2.x += move
         distance += 100.00 * time
     for y in range(int(HEIGHT / 2)):
         for x in range(WIDTH):
@@ -59,16 +61,15 @@ def oncreation(surface, time=3.5):
                 surface.set_at((x, row), strip_color)
             if right_grass <= x < WIDTH:  # (712 <= x < 800)
                 surface.set_at((x, row), grass_color)
-            sky_rect.x += 1
-            #sky_rect2.x += 1
-            sky_rect2.move(sky_rect2.x + 1, HEIGHT/2)
-            if sky_rect.x >= 540:
-                sky_rect.x = 0
-                #sky_rect2.x = 0
+
+            if sky_rect.x >= WIDTH:
+                sky_rect.right = 0
+
+            if sky_rect2.x >= WIDTH:
+                sky_rect2.right = 0
 
     car_pos = (WIDTH / 2) + ((WIDTH * start_pos) / 2.0)
     pygame.draw.circle(surface, 'black', (car_pos, HEIGHT - 70), 10)
-    pygame.display.flip()
 
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
