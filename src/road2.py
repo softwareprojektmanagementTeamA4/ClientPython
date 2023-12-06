@@ -60,7 +60,6 @@ def drawQuad(
         surface, color, [(x1 - w1, y1), (x2 - w2, y2), (x2 + w2, y2), (x1 + w1, y1)]
     )
 
-
 class GameWindow:
     def __init__(self):
         pygame.init()
@@ -69,6 +68,32 @@ class GameWindow:
         self.clock = pygame.time.Clock()
         self.last_time = time.time()
         self.dt = 0
+
+        self.create_background()
+
+    def create_background(self):
+        """
+        Create the background surface
+        """
+
+        self.background_image = pygame.image.load("media/backgroundRepeatable.png").convert_alpha()
+        self.background_image = pygame.transform.scale(
+            self.background_image, (WINDOW_WIDTH, self.background_image.get_height())
+        )
+        self.background_surface = pygame.Surface(
+            (self.background_image.get_width() * 3, self.background_image.get_height())
+        )
+        self.background_surface.blit(self.background_image, (0, 0))
+        self.background_surface.blit(
+            self.background_image, (self.background_image.get_width(), 0)
+        )
+        self.background_surface.blit(
+            self.background_image, (self.background_image.get_width() * 2, 0)
+        )
+        self.background_rect = self.background_surface.get_rect(
+            topleft=(-self.background_image.get_width(), 0)
+        )
+        self.window_surface.blit(self.background_surface, self.background_rect)
 
     def run(self):
         """
@@ -154,6 +179,20 @@ class GameWindow:
 
             camH = lines[startPos].y + playerY
             maxy = WINDOW_HEIGHT
+
+            # draw and move background
+
+            if speed > 0:
+                self.background_rect.x -= lines[startPos].curve * 2
+            elif speed < 0:
+                self.background_rect.x += lines[startPos].curve * 2
+
+            if self.background_rect.right < WINDOW_WIDTH:
+                self.background_rect.x = -WINDOW_WIDTH
+            elif self.background_rect.left > 0:
+                self.background_rect.x = -WINDOW_WIDTH
+
+            self.window_surface.blit(self.background_surface, self.background_rect)
 
             # draw road
             for n in range(startPos, startPos + show_N_seg):
