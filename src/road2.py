@@ -76,7 +76,7 @@ class GameWindow:
         Create the background surface
         """
 
-        self.background_image = pygame.image.load("media/backgroundRepeatable.png").convert_alpha()
+        self.background_image = pygame.image.load("src/media/backgroundRepeatable.png").convert_alpha()
         self.background_image = pygame.transform.scale(
             self.background_image, (WINDOW_WIDTH, self.background_image.get_height())
         )
