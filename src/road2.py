@@ -29,6 +29,11 @@ class Line:
         self.scale = 0.0  # scale from camera position
         self.curve = 0.0  # curve radius
 
+        self.spriteX = 0.0  # sprite position X
+        self.clip = 0.0
+        self.sprite: pygame.Surface = None
+        self.sprite_rect: pygame.Rect = None
+
         self.grass_color: pygame.Color = "black"
         self.rumble_color: pygame.Color = "black"
         self.road_color: pygame.Color = "black"
@@ -42,6 +47,44 @@ class Line:
         self.X = (1 + self.scale * (self.x - camX)) * WINDOW_WIDTH / 2
         self.Y = (1 - self.scale * (self.y - camY)) * WINDOW_HEIGHT / 2
         self.W = self.scale * roadW * WINDOW_WIDTH / 2
+
+    def drawSprite(self, draw_surface: pygame.Surface):
+        """
+        Draw the lines sprite(s) on the screen.
+        """
+
+        # If there is no sprite, return
+        if self.sprite is None:
+            return
+        # Get the sprite width and height
+        w = self.sprite.get_width()
+        h = self.sprite.get_height()
+        # Calculate the destination X and Y
+        destX = self.X + self.scale * self.spriteX * WINDOW_WIDTH / 2
+        destY = self.Y + 4
+        destW = w * self.W / 266
+        destH = h * self.W / 266
+
+        destX += destW * self.spriteX
+        destY += destH * -1
+
+        # clip the sprite if below ground (clipH)
+        # clipH is the height of the sprite below the ground
+        clipH = destY + destH - self.clip
+        if clipH < 0:
+            clipH = 0
+        if clipH >= destH:
+            return
+
+        # avoid scalling up images which causes lag
+        if destW > w:
+            return
+
+        # mask the sprite if below ground (clipH)
+        scaled_sprite = pygame.transform.scale(self.sprite, (destW, destH))
+        crop_surface = scaled_sprite.subsurface(0, 0, destW, destH - clipH)
+
+        draw_surface.blit(crop_surface, (destX, destY))
 
 def drawQuad(
     surface: pygame.Surface,
@@ -70,6 +113,7 @@ class GameWindow:
         self.dt = 0
 
         self.create_background()
+        self.load_sprites()
 
     def create_background(self):
         """
@@ -98,6 +142,16 @@ class GameWindow:
             topleft=(-self.background_image.get_width(), 0)
         )
         self.window_surface.blit(self.background_surface, self.background_rect)
+
+    def load_sprites(self):
+        """
+        Load sprites
+        """
+        # sprites
+        # load sprites named 1.png - xy.png
+        self.sprites: List[pygame.Surface] = []
+        for i in range(1, 3):
+            self.sprites.append(pygame.image.load(f"src/media/{i}.png").convert_alpha())
 
     def run(self):
         """
@@ -132,6 +186,28 @@ class GameWindow:
             # left curve
             if i > 1100:
                 line.curve = -0.7
+
+            # Sprites segments
+            if i < 300 and i % 20 == 0:
+                line.spriteX = -2.5
+                line.sprite = self.sprites[1]
+
+            if i % 17 == 0:
+                line.spriteX = 2.0
+                line.sprite = self.sprites[1]
+
+            if i > 300 and i % 20 == 0:
+                line.spriteX = -0.7
+                line.sprite = self.sprites[0]
+
+            if i > 800 and i % 20 == 0:
+                line.spriteX = -1.2
+                line.sprite = self.sprites[0]
+
+            if i == 400:
+                line.spriteX = -1.2
+                line.sprite = self.sprites[0]
+
 
             lines.append(line)
 
@@ -208,6 +284,8 @@ class GameWindow:
                 x += dx
                 dx += current.curve
 
+                current.clip = maxy
+
                 # don't draw "above ground"
                 if current.Y >= maxy:
                     continue
@@ -245,6 +323,10 @@ class GameWindow:
                     current.Y,
                     current.W,
                 )
+            
+            # draw sprites
+            for n in range(startPos + show_N_seg, startPos + 1, -1):
+                lines[n % NumberOfLines].drawSprite(self.window_surface)
 
             pygame.display.update()
             self.clock.tick(tick_rate)
