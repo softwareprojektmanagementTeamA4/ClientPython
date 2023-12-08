@@ -76,13 +76,16 @@ class GameWindow:
         Create the background surface
         """
 
+        # load background image and scale it to the window width
         self.background_image = pygame.image.load("src/media/backgroundRepeatable.png").convert_alpha()
         self.background_image = pygame.transform.scale(
             self.background_image, (WINDOW_WIDTH, self.background_image.get_height())
         )
+        # create a surface 3 times the width of the background image
         self.background_surface = pygame.Surface(
             (self.background_image.get_width() * 3, self.background_image.get_height())
         )
+        # blit the background image 3 times
         self.background_surface.blit(self.background_image, (0, 0))
         self.background_surface.blit(
             self.background_image, (self.background_image.get_width(), 0)
@@ -90,6 +93,7 @@ class GameWindow:
         self.background_surface.blit(
             self.background_image, (self.background_image.get_width() * 2, 0)
         )
+        # create a rect for the background surface
         self.background_rect = self.background_surface.get_rect(
             topleft=(-self.background_image.get_width(), 0)
         )
@@ -181,12 +185,12 @@ class GameWindow:
             maxy = WINDOW_HEIGHT
 
             # draw and move background
-
             if speed > 0:
                 self.background_rect.x -= lines[startPos].curve * 2
             elif speed < 0:
                 self.background_rect.x += lines[startPos].curve * 2
 
+            # loop the background
             if self.background_rect.right < WINDOW_WIDTH:
                 self.background_rect.x = -WINDOW_WIDTH
             elif self.background_rect.left > 0:
