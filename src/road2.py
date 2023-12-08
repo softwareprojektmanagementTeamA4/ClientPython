@@ -3,6 +3,9 @@ import time
 from typing import List
 import pygame
 import sys
+import os
+
+src_path = os.path.dirname(__file__)
 
 WINDOW_WIDTH = 1024
 WINDOW_HEIGHT = 768
@@ -121,7 +124,7 @@ class GameWindow:
         """
 
         # load background image and scale it to the window width
-        self.background_image = pygame.image.load("src/media/backgroundRepeatable.png").convert_alpha()
+        self.background_image = pygame.image.load(os.path.join(src_path, "media/backgroundRepeatable.png")).convert_alpha()
         self.background_image = pygame.transform.scale(
             self.background_image, (WINDOW_WIDTH, self.background_image.get_height())
         )
@@ -151,7 +154,8 @@ class GameWindow:
         # load sprites named 1.png - xy.png
         self.sprites: List[pygame.Surface] = []
         for i in range(1, 3):
-            self.sprites.append(pygame.image.load(f"src/media/{i}.png").convert_alpha())
+            path = os.path.join(src_path, f"media/{i}.png")
+            self.sprites.append(pygame.image.load(path).convert_alpha())
 
     def run(self):
         """
