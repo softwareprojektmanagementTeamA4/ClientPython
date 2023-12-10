@@ -38,7 +38,7 @@ draw_distance = 300                # number of segments to draw
 playerX = 0                       # player x offset from center of road (-1 to 1 to stay independent of roadWidth)
 playerZ = None                    # player relative z distance from camera (computed)
 fog_density = 5                    # exponential fog density
-position = 200                      # current camera Z position (add playerZ to get player's absolute Z position)
+position = 1                     # current camera Z position (add playerZ to get player's absolute Z position)
 speed = 0                          # current speed
 max_speed = segment_length/step    # top speed (ensure we can't move more than 1 segment in a single frame to make collision detection easier)
 accel =  max_speed/5               # acceleration rate - tuned until it 'felt' right
@@ -97,19 +97,25 @@ class GameWindow:
             """
             Update current game state
             """
-            global position, speed, playerX, playerZ
+            global position, speed, playerX, playerZ, sky_offset, hill_offset, tree_offset
             player_segment = find_segment(position + playerZ)
             speed_percent = speed/max_speed
-            dx = delta_time * 2 * (speed/max_speed) # at top speed, should be able to cross from left to right (-1 to 1) in 1 second
+            dx = delta_time * 2 * speed_percent # at top speed, should be able to cross from left to right (-1 to 1) in 1 second
             
             position = Util.increase(position, delta_time * speed, track_length)
             
+            sky_offset  = Util.increase(sky_offset,  (sky_speed  * player_segment['curve'] * speed_percent), 1)
+            hill_offset = Util.increase(hill_offset, (hill_speed * player_segment['curve'] * speed_percent), 1)
+            tree_offset = Util.increase(tree_offset, (tree_speed * player_segment['curve'] * speed_percent), 1)
+
             # input handling
             keys = pygame.key.get_pressed()
             if keys[pygame.K_LEFT]:     # drive left
                 playerX -= dx
             if keys[pygame.K_RIGHT]:    # drive right
                 playerX += dx
+
+            playerX = playerX - (dx * speed_percent * player_segment['curve'] * centrifugal_force) # steering is harder when going around curves
 
             if keys[pygame.K_UP]:       # go faster
                 speed = Util.accelerate(speed, accel, delta_time)
@@ -124,28 +130,43 @@ class GameWindow:
             playerX = Util.limit(playerX, -2, 2) # dont ever let player go too far out of bounds
             speed = Util.limit(speed, 0, max_speed) # or exceed maxSpeed
 
+
+        ############################################################################################################
+        # Render the game world
+        ############################################################################################################
+
         def render():
             """
             Render current game state
             """
+            base_segment = find_segment(position)
+            base_percent = Util.percent_remaining(position, segment_length)
+            maxy = window_height
+
+            x = 0
+            dx = - (base_segment['curve'] * base_percent)
+
             self.surface.fill('#FFFFFF') # clear screen
-            # render background
-            Render.background(self.surface, self.background_sky, window_width, window_height, Background.sky)
-            Render.background(self.surface, self.background_hills, window_width, window_height, Background.hills)
-            Render.background(self.surface, self.background_trees, window_width, window_height, Background.trees)
+
+            Render.background(self.surface, self.background_sky,   window_width, window_height, Background.sky,   sky_offset)  # Render background sky
+            Render.background(self.surface, self.background_hills, window_width, window_height, Background.hills, hill_offset)
+            Render.background(self.surface, self.background_trees, window_width, window_height, Background.trees, tree_offset)
 
             # render road
-            base_segment = find_segment(position)
-            maxy = window_height
             for n in range(draw_distance):
-                segment = segments[(base_segment['index'] + n) % len(segments)]
-                segment['looped'] = segment['index'] < base_segment['index']
-                segment['fog'] = Util.exponential_fog(n/draw_distance, fog_density)
-                
-                Util.project(segment['p1'], playerX * road_width, camera_height, position - (track_length if segment['looped'] else 0), camera_depth, window_width, window_height, road_width)
-                Util.project(segment['p2'], playerX * road_width, camera_height, position - (track_length if segment['looped'] else 0), camera_depth, window_width, window_height, road_width)            
 
-                if (segment['p1']['camera']['z'] <= camera_depth) or (segment['p2']['screen']['y'] >= maxy):
+                segment           = segments[(base_segment['index'] + n) % len(segments)]
+                segment['looped'] = segment['index'] < base_segment['index']
+                segment['fog']    = Util.exponential_fog(n/draw_distance, fog_density)
+                
+                Util.project(segment['p1'], (playerX * road_width) - x,      camera_height, position - (track_length if segment['looped'] else 0), camera_depth, window_width, window_height, road_width)
+                Util.project(segment['p2'], (playerX * road_width) - x - dx, camera_height, position - (track_length if segment['looped'] else 0), camera_depth, window_width, window_height, road_width)            
+
+                x += dx
+                dx += segment['curve']
+
+                if ((segment['p1']['camera']['z'] <= camera_depth) or
+                    (segment['p2']['screen']['y'] >= maxy)):
                     continue
 
                 Render.segment(self.surface, window_width, lanes,
@@ -157,6 +178,7 @@ class GameWindow:
                                segment['p2']['screen']['w'],
                                segment['fog'],
                                segment['color'])
+                
                 maxy = segment['p2']['screen']['y']
 
             # render player
@@ -207,7 +229,6 @@ class GameWindow:
             """
             Add road to track
             """
-            print (enter, hold, leave, curve)
             for n in range(enter):
                 add_segment(Util.ease_in(0, curve, n/enter))
             for n in range(hold):

@@ -218,13 +218,13 @@ class Render:
     #     if (sourceW < imageW):
     #         surface.blit(background, (layer.x, sourceY), (imageW-sourceW, sourceH, destW-1, destH))
 
-    def background(surface, background, width, height, layer):
+    def background(surface, background, width, height, layer, offset):
         """
         Draw background
         background has to be a pygame.Surface
         """
         rotation = 0
-        offset = 0
+        offset = offset or 0
 
         imageW = layer['w']/2
         imageH = layer['h']
