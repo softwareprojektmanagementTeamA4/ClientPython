@@ -58,7 +58,6 @@ path_background_trees = "background/trees.png"
 road_length = 500                 # length of our road
 #########################################################
 
-
 # TODO: implement hud
 
 # class Segment:
@@ -99,8 +98,11 @@ class GameWindow:
             Update current game state
             """
             global position, speed, playerX, playerZ
-            position = Util.increase(position, delta_time * speed, track_length)
+            player_segment = find_segment(position + playerZ)
+            speed_percent = speed/max_speed
             dx = delta_time * 2 * (speed/max_speed) # at top speed, should be able to cross from left to right (-1 to 1) in 1 second
+            
+            position = Util.increase(position, delta_time * speed, track_length)
             
             # input handling
             keys = pygame.key.get_pressed()
@@ -191,28 +193,110 @@ class GameWindow:
             render()
             self.last_time = self.time_now
 
+
+############################################################################################################
+        # Road build functions
+############################################################################################################
+
+        road = {
+            'length': {'none': 0, 'short':  25, 'medium':  50, 'long':  100},
+            'curve' : {'none': 0, 'easy':    2, 'medium':   4, 'hard':    6},
+        }
+
+        def add_road(enter, hold, leave, curve):
+            """
+            Add road to track
+            """
+            print (enter, hold, leave, curve)
+            for n in range(enter):
+                add_segment(Util.ease_in(0, curve, n/enter))
+            for n in range(hold):
+                add_segment(curve)
+            for n in range(leave):
+                add_segment(Util.ease_in_out(curve, 0, n/leave))
+
+        def add_segment(curve):
+            """
+            Add segment to road
+            """
+            n = len(segments)
+            segments.append({
+                'index': n,
+                'p1': {'world': {'x':0, 'y':0, 'z': n * segment_length},
+                       'camera': {'x': 0, 'y': 0, 'z': 0},
+                       'screen': {'x': 0, 'y': 0, 'w': 0, 'scale': 0}},
+                'p2': {'world': {'x':0, 'y':0, 'z': (n + 1) * segment_length}, 
+                       'camera': {'x': 0, 'y': 0, 'z': 0}, 
+                       'screen': {'x': 0, 'y': 0, 'w': 0, 'scale': 0}},
+                'curve': curve,
+                'color': Colors.dark if math.floor(n/rumble_length) % 2 else Colors.light
+            })
+
+        def add_straight(num):
+            num = num or road['length']['medium']
+            add_road(num, num, num, 0)
+
+        def add_curve(num, curve):
+            num = num or road['length']['medium']
+            curve = curve or road['curve']['medium']
+            add_road(num, num, num, curve)
+
+        def add_s_curves():
+            """
+            Add curves to road
+            """
+            add_road(road['length']['medium'], road['length']['medium'], road['length']['medium'],  -road['curve']['easy'])
+            add_road(road['length']['medium'], road['length']['medium'], road['length']['medium'],   road['curve']['medium'])
+            add_road(road['length']['medium'], road['length']['medium'], road['length']['medium'],   road['curve']['easy'])
+            add_road(road['length']['medium'], road['length']['medium'], road['length']['medium'],  -road['curve']['easy'])
+            add_road(road['length']['medium'], road['length']['medium'], road['length']['medium'],  -road['curve']['medium'])
+
         def reset_road():
-            """
-            Reset and setup road
-            """
+            global playerZ
             global track_length
-            for n in range(1, road_length):
-                segments.append({
-                    'index': n,
-                    'p1': {'world': {'x':0, 'y':0, 'z': n * segment_length},
-                           'camera': {'x': 0, 'y': 0, 'z': 0},
-                           'screen': {'x': 0, 'y': 0, 'w': 0, 'scale': 0}},
-                    'p2': {'world': {'x':0, 'y':0, 'z': (n + 1) * segment_length}, 
-                           'camera': {'x': 0, 'y': 0, 'z': 0}, 
-                           'screen': {'x': 0, 'y': 0, 'w': 0, 'scale': 0}},
-                    'color': Colors.dark if math.floor(n/rumble_length) % 2 else Colors.light
-                })
-            
+            add_straight(road['length']['short'])
+            add_s_curves()
+            add_straight(road['length']['long'])
+            add_curve(road['length']['medium'], road['curve']['medium'])
+            add_curve(road['length']['long'], road['curve']['medium'])
+            add_straight(None)
+            add_s_curves()
+            add_curve(road['length']['long'], -road['curve']['medium'])
+            add_curve(road['length']['long'], -road['curve']['medium'])
+            add_straight(None)
+            add_s_curves()
+            add_curve(road['length']['long'], -road['curve']['easy'])
+
+            segments[find_segment(playerZ)['index'] + 2]['color'] = Colors.start
+            segments[find_segment(playerZ)['index'] + 3]['color'] = Colors.start
+
+            for n in range(rumble_length):
+                segments[len(segments) - 1 - n]['color'] = Colors.finish
+
             track_length = len(segments) * segment_length
 
+
+        # reset_road version straight
+        # def reset_road():
+        #     """
+        #     Reset and setup road
+        #     """
+        #     global track_length
+        #     for n in range(1, road_length):
+        #         segments.append({
+        #             'index': n,
+        #             'p1': {'world': {'x':0, 'y':0, 'z': n * segment_length},
+        #                    'camera': {'x': 0, 'y': 0, 'z': 0},
+        #                    'screen': {'x': 0, 'y': 0, 'w': 0, 'scale': 0}},
+        #             'p2': {'world': {'x':0, 'y':0, 'z': (n + 1) * segment_length}, 
+        #                    'camera': {'x': 0, 'y': 0, 'z': 0}, 
+        #                    'screen': {'x': 0, 'y': 0, 'w': 0, 'scale': 0}},
+        #             'color': Colors.dark if math.floor(n/rumble_length) % 2 else Colors.light
+        #         })
+            
+        #     track_length = len(segments) * segment_length
+
         def reset():
-            if (len(segments) == 0):
-                reset_road()
 
             global camera_depth
             global player_z
@@ -222,13 +306,15 @@ class GameWindow:
             player_z = (camera_height * camera_depth)
             playerZ = (camera_height * camera_depth)
             resolution = window_height / 480
+          
+            if (len(segments) == 0):
+                reset_road()
 
 
         def find_segment(z):
             """
             Find segment by z
             """
-            # print (z, segment_length, len(segments))
             return segments[math.floor(z/segment_length) % len(segments)]
 
 
