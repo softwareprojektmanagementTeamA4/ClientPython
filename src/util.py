@@ -5,6 +5,8 @@ import pygame
 import math
 from sprites import sprite_list
 
+SPRITE_SCALE = 0.3 * (1/sprite_list['PLAYER_STRAIGHT']['w'])
+
 class Colors:
     sky = pygame.Color("#72D7EE")
     tree = pygame.Color("#005108")
@@ -250,12 +252,44 @@ class Render:
         if (sourceW < imageW):
             surface.blit(background, (layer.x, sourceY), (imageW-sourceW, sourceH, destW-1, destH))
 
-    # def player(surface, width, height, resolution, roadWidth, sprites, speed_percent, scale, destX, destY, steer, updown):
-    #     """
-    #     Draw player
-    #     """
-    #     bounce = (1.5 * random.random() * speed_percent * resolution) * Util.random_choice([-1, 1])
-    #     if (steer < 0):
+    def player(surface, width, height, resolution, roadWidth, sprites, speed_percent, scale, destX, destY, steer, updown):
+        """
+        Draw player
+        """
+        bounce = (1.5 * random.random() * speed_percent * resolution) * Util.random_choice([-1, 1])
+        if (steer < 0):
+            sprite = sprites['PLAYER_UPHILL_LEFT'] if updown > 0 else sprites['PLAYER_LEFT']
+        elif (steer > 0):
+            sprite = sprites['PLAYER_UPHILL_RIGHT'] if updown > 0 else sprites['PLAYER_RIGHT']
+        else:
+            sprite = sprites['PLAYER_UPHILL_STRAIGHT'] if updown > 0 else sprites['PLAYER_STRAIGHT']
+
+        Render.sprite(surface, width, height, resolution, roadWidth, sprite, scale, destX, destY + bounce, -0.5, -1, 0)
+
+    def sprite(surface, width, height, resolution, roadWidth, sprite, scale, destX, destY, offsetX, offsetY, clipY):
+        """
+        Draw sprite
+        """
+        print (roadWidth)
+        destW = (sprite.get_width() * scale * width / 2) * (SPRITE_SCALE * roadWidth)
+        destH = (sprite.get_height() * scale * width / 2) * (SPRITE_SCALE * roadWidth)
+        print ("before", destX, destY, destW, destH)
+
+        destX = destX + (destW * (offsetX or 0))
+        destY = destY + (destH * (offsetY or 0))
+        print ("after", destX, destY, destW, destH)
+
+        clipH = math.max(0, destY + destH - clipY) if (clipY) else 0
+        if (clipH < destH):
+            # rect = (destX, destY, destW, destH - clipH)
+            # destW = 1000
+            # destH = 1000
+            sprite = pygame.transform.scale(sprite, (destW, destH))
+
+            # surface.blit(sprite, (destX, destY))
+            # surface.blit(sprite, (destX, destY), (0, 0, destW, destH - clipH))
+            surface.blit(sprite, (destX, destY), (0, 0, destW, destH - clipH))
+
 
     def fog(surface, x, y, width, height, fog):
         """

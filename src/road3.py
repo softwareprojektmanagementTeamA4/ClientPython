@@ -158,6 +158,21 @@ class GameWindow:
                 maxy = segment['p2']['screen']['y']
 
             # render player
+            # calc steering
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_LEFT]:
+                steer = speed * -1
+            elif keys[pygame.K_RIGHT]:
+                steer = speed
+            else:
+                steer = 0
+
+            Render.player(self.surface, window_width, window_height, resolution, road_width, sprites, speed/max_speed,
+                          camera_depth/playerZ,
+                          window_width/2,
+                          window_height,
+                          steer,
+                          0)
 
             
         def frame():
@@ -201,8 +216,12 @@ class GameWindow:
 
             global camera_depth
             global player_z
+            global playerZ
+            global resolution
             camera_depth = 1 / math.tan((field_of_view/2) * math.pi/180)
             player_z = (camera_height * camera_depth)
+            playerZ = (camera_height * camera_depth)
+            resolution = window_height / 480
 
 
         def find_segment(z):
