@@ -9,7 +9,7 @@ class Colors:
     tree = pygame.Color("#005108")
     fog = pygame.Color("#005108")
     light = {'road': pygame.Color("#6B6B6B"), 'grass': pygame.Color("#10AA10"), 'rumble': pygame.Color("#555555"), 'lane': pygame.Color("#CCCCCC")}
-    dark = {'road': pygame.Color("#696969"), 'grass': pygame.Color("#009A00"), 'rumble': pygame.Color("#BBBBBB")}
+    dark = {'road': pygame.Color("#6B6B6B"), 'grass': pygame.Color("#009A00"), 'rumble': pygame.Color("#BBBBBB")}
     start = {'road': pygame.Color("#FFFFFF"), 'grass': pygame.Color("#FFFFFF"), 'rumble': pygame.Color("#FFFFFF")}
     finish = {'road': pygame.Color("#000000"), 'grass': pygame.Color("#000000"), 'rumble': pygame.Color("#000000")}
 
@@ -218,10 +218,13 @@ class Render:
         destW = math.floor(width * (sourceW / imageW))
         destH = height
 
+        # background_picture = pygame.transform.scale(background, (width, height))
+        # surface.blit(background_picture, (destX, destY), (sourceX, sourceY, sourceW, sourceH))
+        background = pygame.transform.scale(background, (width, 480))
         surface.blit(background, (destX, destY), (sourceX, sourceY, sourceW, sourceH))
 
         if (sourceW < imageW):
-            surface.blit(background, (layer.x, sourceY), (imageW-sourceW, sourceH, destW-1, destH))
+            surface.blit(background_picture, (layer.x, sourceY), (imageW-sourceW, sourceH, destW-1, destH))
 
 
     # def fog(surface, x, y, width, height, fog):

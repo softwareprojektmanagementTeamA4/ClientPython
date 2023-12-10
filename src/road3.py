@@ -38,7 +38,7 @@ draw_distance = 300                # number of segments to draw
 playerX = 0                       # player x offset from center of road (-1 to 1 to stay independent of roadWidth)
 playerZ = None                    # player relative z distance from camera (computed)
 fog_density = 5                    # exponential fog density
-position = 1                       # current camera Z position (add playerZ to get player's absolute Z position)
+position = 200                      # current camera Z position (add playerZ to get player's absolute Z position)
 speed = 0                          # current speed
 max_speed = segment_length/step    # top speed (ensure we can't move more than 1 segment in a single frame to make collision detection easier)
 accel =  max_speed/5               # acceleration rate - tuned until it 'felt' right
@@ -98,14 +98,13 @@ class GameWindow:
         Main game loop
         """
 
-        def update(self, delta_time):
+        def update(delta_time):
             """
             Update current game state
             """
             global position, speed, playerX, playerZ
             position = Util.increase(position, delta_time * speed, track_length)
             dx = delta_time * 2 * (speed/max_speed) # at top speed, should be able to cross from left to right (-1 to 1) in 1 second
-
             # input handling
             keys = pygame.key.get_pressed()
             if keys[pygame.K_LEFT]:     # drive left
@@ -114,15 +113,14 @@ class GameWindow:
                 playerX += dx
 
             if keys[pygame.K_UP]:       # go faster
-                print ("upupup")
-                speed += Util.accelerate(speed, accel, delta_time)
+                speed = Util.accelerate(speed, accel, delta_time)
             elif keys[pygame.K_DOWN]:   # slow down
-                speed -= Util.accelerate(speed, breaking, delta_time)
+                speed = Util.accelerate(speed, breaking, delta_time)
             else:                       # slow down if not pressing forward or backward
-                speed -= Util.accelerate(speed, decel, delta_time)
+                speed = Util.accelerate(speed, decel, delta_time)
 
             if ((playerX < -1) or (playerX > 1)) and (speed > off_road_limit):
-                speed -= Util.accelerate(speed, off_road_decel, delta_time) # driving off road slows you down
+                speed = Util.accelerate(speed, off_road_decel, delta_time) # driving off road slows you down
             
             playerX = Util.limit(playerX, -2, 2) # dont ever let player go too far out of bounds
             speed = Util.limit(speed, 0, max_speed) # or exceed maxSpeed
@@ -133,9 +131,9 @@ class GameWindow:
             """
             self.surface.fill('#FFFFFF') # clear screen
             # render background
-            Render.background(self.surface, self.background, window_width, window_height, Background.sky)
-            Render.background(self.surface, self.background, window_width, window_height, Background.hills)
-            Render.background(self.surface, self.background, window_width, window_height, Background.trees)
+            Render.background(self.surface, self.background_sky, window_width, window_height, Background.sky)
+            Render.background(self.surface, self.background_hills, window_width, window_height, Background.hills)
+            Render.background(self.surface, self.background_trees, window_width, window_height, Background.trees)
 
             # render road
             base_segment = find_segment(position)
@@ -145,8 +143,8 @@ class GameWindow:
                 segment['looped'] = segment['index'] < base_segment['index']
                 segment['fog'] = Util.exponential_fog(n/draw_distance, fog_density)
                 
-                Util.project(segment['p1'], playerX * road_width, camera_height, position - track_length if segment['looped'] else 0, camera_depth, window_width, window_height, road_width)
-                Util.project(segment['p2'], playerX * road_width, camera_height, position - track_length if segment['looped'] else 0, camera_depth, window_width, window_height, road_width)            
+                Util.project(segment['p1'], playerX * road_width, camera_height, position - (track_length if segment['looped'] else 0), camera_depth, window_width, window_height, road_width)
+                Util.project(segment['p2'], playerX * road_width, camera_height, position - (track_length if segment['looped'] else 0), camera_depth, window_width, window_height, road_width)            
 
                 if (segment['p1']['camera']['z'] <= camera_depth) or (segment['p2']['screen']['y'] >= maxy):
                     continue
@@ -170,9 +168,10 @@ class GameWindow:
             self.delta_time = min(1, (self.time_now - self.last_time) / 1000)
             self.global_delta_time += self.delta_time
 
-            while (self.global_delta_time > step):
-                self.global_delta_time -= step
-                update(step)
+            # while (self.global_delta_time > step):
+            #     self.global_delta_time -= step
+            #     update(step)
+            update(step)
 
             render()
             self.last_time = self.time_now
@@ -181,12 +180,13 @@ class GameWindow:
             """
             Reset and setup road
             """
+            global track_length
             for n in range(1, road_length):
                 segments.append({
                     'index': n,
                     'p1': {'world': {'x':0, 'y':0, 'z': n * segment_length},
                            'camera': {'x': 0, 'y': 0, 'z': 0},
-                           'screen': {}},
+                           'screen': {'x': 0, 'y': 0, 'w': 0, 'scale': 0}},
                     'p2': {'world': {'x':0, 'y':0, 'z': (n + 1) * segment_length}, 
                            'camera': {'x': 0, 'y': 0, 'z': 0}, 
                            'screen': {'x': 0, 'y': 0, 'w': 0, 'scale': 0}},
@@ -218,7 +218,6 @@ class GameWindow:
             self.clock.tick(fps)
             frame()
             pygame.display.update()
-
 
             # handle quit event
             for event in pygame.event.get([pygame.QUIT]):
