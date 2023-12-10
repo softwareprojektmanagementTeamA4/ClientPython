@@ -122,10 +122,15 @@ class Util:
         """
         Project p onto screen
         """
+        #TODO: bug in the screen scale = camera_depth / p.camera.z 
+
         p['camera']['x'] = (p['world']['x'] or 0) - cameraX
         p['camera']['y'] = (p['world']['y'] or 0) - cameraY
         p['camera']['z'] = (p['world']['z'] or 0) - cameraZ
-        p['screen']['scale'] = camera_depth / p['camera']['z']
+        if (p['camera']['z'] > 0):
+            p['screen']['scale'] = camera_depth / p['camera']['z']
+        else:
+            p['screen']['scale'] = 0
         p['screen']['x'] = round((width / 2) + (p['screen']['scale'] * p['camera']['x'] * width / 2))
         p['screen']['y'] = round((height / 2) - (p['screen']['scale'] * p['camera']['y'] * height / 2))
         p['screen']['w'] = round((p['screen']['scale'] * roadWidth * width / 2))
@@ -218,15 +223,15 @@ class Render:
     #     if (sourceW < imageW):
     #         surface.blit(background, (layer.x, sourceY), (imageW-sourceW, sourceH, destW-1, destH))
 
-    def background(surface, background, width, height, layer, offset):
+    def background(surface, background, width, height, layer, rotation):
         """
         Draw background
         background has to be a pygame.Surface
         """
-        rotation = 0
-        offset = offset or 0
+        rotation = rotation or 0
+        background_offset = 0
 
-        imageW = layer['w']/2
+        imageW = layer['w']*10
         imageH = layer['h']
 
         sourceX = layer['x'] + math.floor(layer['w'] * rotation)
@@ -235,22 +240,19 @@ class Render:
         sourceH = imageH
 
         destX = 0
-        destY = offset
+        destY = background_offset
         destW = math.floor(width * (sourceW / imageW))
         destH = height
 
         # background = pygame.transform.scale(background, (imageW * 2, imageH))
-        background_pos = (sourceX, sourceY)
         background = pygame.transform.scale(background, (width * 2, height))
-        surface.blit(background, background_pos)
-
-        # background_picture = pygame.transform.scale(background, (width, height))
-        # surface.blit(background_picture, (destX, destY), (sourceX, sourceY, sourceW, sourceH))
-        # surface.blit(background, (destX, destY))
-        # surface.blit(background, (destX, destY), (sourceX, sourceY, sourceW, sourceH))
+        # background = pygame.transform.scale(background, (destW, destH))
+        # surface.blit(background, background_pos)
+        surface.blit(background, (destX, destY), (sourceX, sourceY, sourceW, sourceH))
 
         if (sourceW < imageW):
-            surface.blit(background, (layer.x, sourceY), (imageW-sourceW, sourceH, destW-1, destH))
+            surface.blit(background, (layer['x'], sourceY), (imageW-sourceW, sourceH, destW-1, destH))
+            # surface.blit(background, (destW-1, destY), (layer['x'], sourceY, imageW-sourceW, sourceH))
 
     def player(surface, width, height, resolution, roadWidth, sprites, speed_percent, scale, destX, destY, steer, updown):
         """
@@ -293,7 +295,7 @@ class Render:
         Draw fog
         """
         if (fog < 1):
-            s = pygame.Surface((width, -height))
+            s = pygame.Surface((width, -height + 1))
             s.set_alpha(255 * (1-fog))
             s.fill(Colors.fog)
             surface.blit(s, (x, y+height))

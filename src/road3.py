@@ -147,7 +147,7 @@ class GameWindow:
             dx = - (base_segment['curve'] * base_percent)
 
             self.surface.fill('#FFFFFF') # clear screen
-
+            
             Render.background(self.surface, self.background_sky,   window_width, window_height, Background.sky,   sky_offset)  # Render background sky
             Render.background(self.surface, self.background_hills, window_width, window_height, Background.hills, hill_offset)
             Render.background(self.surface, self.background_trees, window_width, window_height, Background.trees, tree_offset)
