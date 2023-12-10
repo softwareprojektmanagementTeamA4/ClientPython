@@ -10,7 +10,7 @@ src_path = os.path.dirname(__file__)
 WINDOW_WIDTH = 1024
 WINDOW_HEIGHT = 768
 
-roadW = 2000  # road width (left to right)
+roadW = 4000  # road width (left to right)
 segL = 200  # segment length (top to bottom)
 camD = 0.84  # camera depth
 show_N_seg = 300  # number of segments to show on screen
@@ -153,7 +153,7 @@ class GameWindow:
         # sprites
         # load sprites named 1.png - xy.png
         self.sprites: List[pygame.Surface] = []
-        for i in range(1, 3):
+        for i in range(1, 2):
             path = os.path.join(src_path, f"media/{i}.png")
             self.sprites.append(pygame.image.load(path).convert_alpha())
 
@@ -171,9 +171,11 @@ class GameWindow:
             )  # adding a small value avoids Line.project() errors
 
             # change color at every other 3 lines (int floor division)
-            grass_color = light_grass if (i // 3) % 2 else dark_grass
+            # grass_color = light_grass if (i // 3) % 2 else dark_grass
+            # road_color = light_road if (i // 3) % 2 else dark_road
             rumble_color = white_rumble if (i // 3) % 2 else black_rumble
-            road_color = light_road if (i // 3) % 2 else dark_road
+            grass_color = light_grass
+            road_color = dark_road
 
             line.grass_color = grass_color
             line.rumble_color = rumble_color
@@ -194,24 +196,11 @@ class GameWindow:
             # Sprites segments
             if i < 300 and i % 20 == 0:
                 line.spriteX = -2.5
-                line.sprite = self.sprites[1]
+                line.sprite = self.sprites[0]
 
             if i % 17 == 0:
                 line.spriteX = 2.0
-                line.sprite = self.sprites[1]
-
-            if i > 300 and i % 20 == 0:
-                line.spriteX = -0.7
                 line.sprite = self.sprites[0]
-
-            if i > 800 and i % 20 == 0:
-                line.spriteX = -1.2
-                line.sprite = self.sprites[0]
-
-            if i == 400:
-                line.spriteX = -1.2
-                line.sprite = self.sprites[0]
-
 
             lines.append(line)
 
@@ -219,6 +208,9 @@ class GameWindow:
         pos = 0
         playerX = 0  # player start at the center of the road
         playerY = 1500  # camera height offset
+
+        speed = 0
+        self.last_acceleration_time = time.time()
 
         while True:
             self.dt = time.time() - self.last_time
@@ -230,12 +222,16 @@ class GameWindow:
                     pygame.quit()
                     sys.exit()
 
-            speed = 0
+            # speed = 0
             keys = pygame.key.get_pressed()
             if keys[pygame.K_UP]:
-                speed += segL  # has to be integer times the segment length
+                if speed < segL * 5 and (time.time() - self.last_acceleration_time) > 0.5:
+                    speed += segL  # has to be integer times the segment length
+                    self.last_acceleration_time = time.time()
             if keys[pygame.K_DOWN]:
-                speed -= segL  # has to be integer times the segment length
+                if speed > -segL * 5 and (time.time() - self.last_acceleration_time) > 0.5:
+                    speed -= segL  # has to be integer times the segment length
+                    self.last_acceleration_time = time.time()
             if keys[pygame.K_RIGHT]:
                 playerX += 200
             if keys[pygame.K_LEFT]:
@@ -257,7 +253,12 @@ class GameWindow:
                 pos -= NumberOfLines * segL
             while pos < 0:
                 pos += NumberOfLines * segL
+
+            # Calculate which line to start drawing from
+            # From position to segment
+            # startPos = int(pos // segL)
             startPos = pos // segL
+            print(startPos)
 
             x = dx = 0.0  # curve offset on x axis
 
