@@ -270,14 +270,11 @@ class Render:
         """
         Draw sprite
         """
-        print (roadWidth)
         destW = (sprite.get_width() * scale * width / 2) * (SPRITE_SCALE * roadWidth)
         destH = (sprite.get_height() * scale * width / 2) * (SPRITE_SCALE * roadWidth)
-        print ("before", destX, destY, destW, destH)
 
         destX = destX + (destW * (offsetX or 0))
         destY = destY + (destH * (offsetY or 0))
-        print ("after", destX, destY, destW, destH)
 
         clipH = math.max(0, destY + destH - clipY) if (clipY) else 0
         if (clipH < destH):
