@@ -105,6 +105,7 @@ class GameWindow:
             global position, speed, playerX, playerZ
             position = Util.increase(position, delta_time * speed, track_length)
             dx = delta_time * 2 * (speed/max_speed) # at top speed, should be able to cross from left to right (-1 to 1) in 1 second
+            
             # input handling
             keys = pygame.key.get_pressed()
             if keys[pygame.K_LEFT]:     # drive left
