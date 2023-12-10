@@ -3,6 +3,7 @@ import random
 from math import cos, pi, e
 import pygame
 import math
+from sprites import sprite_list
 
 class Colors:
     sky = pygame.Color("#72D7EE")
@@ -14,9 +15,21 @@ class Colors:
     finish = {'road': pygame.Color("#000000"), 'grass': pygame.Color("#000000"), 'rumble': pygame.Color("#000000")}
 
 class Background:
-    hills = {'x': 5, 'y': 5, 'w': 1280, 'h': 480}
-    sky = {'x': 5, 'y': 495, 'w': 1280, 'h': 480}
-    trees = {'x': 5, 'y': 985, 'w': 1280, 'h': 480}
+    hills = {'x': 0, 'y': 0, 'w': 1280, 'h': 480}
+    sky = {'x': 0, 'y': 0, 'w': 1280, 'h': 480}
+    trees = {'x': 0, 'y': 0, 'w': 1280, 'h': 480}
+
+class Game:
+    def load_images():
+        """
+        Load images
+        """
+        images = {}
+        sprite_sheet = pygame.image.load("media/sprites.png")
+        for name, sprite in sprite_list.items():
+            images[name] = sprite_sheet.subsurface(pygame.Rect(sprite['x'], sprite['y'], sprite['w'], sprite['h']))
+
+        return images
 
 class Util:
     def timestamp():
@@ -42,6 +55,12 @@ class Util:
         Return random integer between low and high
         """
         return random.randint(low, high)
+    
+    def random_choice(options):
+        """
+        Return random choice from options
+        """
+        return options[random.randint(0, len(options) - 1)]
 
     def ease_in(a, b, percent):
         """
@@ -157,17 +176,17 @@ class Render:
         Render.polygon(surface, x1 + w1 + r1, y1, x1 + w1, y1, x2 + w2, y2, x2 + w2 + r2, y2, color['rumble'])
         Render.polygon(surface, x1 - w1, y1, x1 + w1, y1, x2 + w2, y2, x2 - w2, y2, color['road'])
         
-        # if (color['lane']):
-        #     lanew1 = w1 * 2 / lanes
-        #     lanew2 = w2 * 2 / lanes
-        #     lanex1 = x1 - w1 + lanew1
-        #     lanex2 = x2 - w2 + lanew2
-        #     for lane in range(1, lanes):
-        #         Render.polygon(surface, lanex1 - l1 / 2, y1, lanex1 + l1 / 2, y1, lanex2 + l2 / 2, y2, lanex2 - l2 / 2, y2, color['lane'])
-        #         lanex1 += lanew1
-        #         lanex2 += lanew2
+        if ('lane' in color):
+            lanew1 = w1 * 2 / lanes
+            lanew2 = w2 * 2 / lanes
+            lanex1 = x1 - w1 + lanew1
+            lanex2 = x2 - w2 + lanew2
+            for lane in range(1, lanes):
+                Render.polygon(surface, lanex1 - l1 / 2, y1, lanex1 + l1 / 2, y1, lanex2 + l2 / 2, y2, lanex2 - l2 / 2, y2, color['lane'])
+                lanex1 += lanew1
+                lanex2 += lanew2
         
-        # Render.fog(surface, 0, y1, width, y2 - y1, fog)
+        Render.fog(surface, 0, y1, width, y2 - y1, fog)
 
         
 
@@ -218,19 +237,33 @@ class Render:
         destW = math.floor(width * (sourceW / imageW))
         destH = height
 
+        # background = pygame.transform.scale(background, (imageW * 2, imageH))
+        background_pos = (sourceX, sourceY)
+        background = pygame.transform.scale(background, (width * 2, height))
+        surface.blit(background, background_pos)
+
         # background_picture = pygame.transform.scale(background, (width, height))
         # surface.blit(background_picture, (destX, destY), (sourceX, sourceY, sourceW, sourceH))
-        background = pygame.transform.scale(background, (width, 480))
-        surface.blit(background, (destX, destY), (sourceX, sourceY, sourceW, sourceH))
+        # surface.blit(background, (destX, destY))
+        # surface.blit(background, (destX, destY), (sourceX, sourceY, sourceW, sourceH))
 
         if (sourceW < imageW):
-            surface.blit(background_picture, (layer.x, sourceY), (imageW-sourceW, sourceH, destW-1, destH))
+            surface.blit(background, (layer.x, sourceY), (imageW-sourceW, sourceH, destW-1, destH))
 
+    # def player(surface, width, height, resolution, roadWidth, sprites, speed_percent, scale, destX, destY, steer, updown):
+    #     """
+    #     Draw player
+    #     """
+    #     bounce = (1.5 * random.random() * speed_percent * resolution) * Util.random_choice([-1, 1])
+    #     if (steer < 0):
 
-    # def fog(surface, x, y, width, height, fog):
-    #     """
-    #     Draw fog
-    #     """
-    #     if (fog < 1):
-    #         surface.set_alpha(1-fog)
-    #         pygame.set_
+    def fog(surface, x, y, width, height, fog):
+        """
+        Draw fog
+        """
+        if (fog < 1):
+            s = pygame.Surface((width, -height))
+            s.set_alpha(255 * (1-fog))
+            s.fill(Colors.fog)
+            surface.blit(s, (x, y+height))
+            s.set_alpha(255)

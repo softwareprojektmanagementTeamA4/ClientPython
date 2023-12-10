@@ -58,10 +58,6 @@ path_background_trees = "background/trees.png"
 road_length = 500                 # length of our road
 #########################################################
 
-keyLeft = False                    # are we steering left?
-keyRight = False                   # are we steering right?
-keyFaster = False                  # are we accelerating?
-keySlower = False                  # are we decelerating?
 
 # TODO: implement hud
 
@@ -161,6 +157,9 @@ class GameWindow:
                                segment['color'])
                 maxy = segment['p2']['screen']['y']
 
+            # render player
+
+            
         def frame():
             """
             Main game frame
@@ -213,6 +212,11 @@ class GameWindow:
             # print (z, segment_length, len(segments))
             return segments[math.floor(z/segment_length) % len(segments)]
 
+
+        # Start of the game
+        
+        # Game.
+        sprites = Game.load_images()
         reset()
         # main game loop
         while True:
