@@ -34,6 +34,16 @@ class Game:
         return images
 
 class Util:
+
+    def to_int(number, default):
+        """
+        Convert number to int
+        """
+        try:
+            return int(number)
+        except ValueError:
+            return default
+
     def timestamp():
         """
         Return current timestamp
@@ -63,6 +73,12 @@ class Util:
         Return random choice from options
         """
         return options[random.randint(0, len(options) - 1)]
+
+    def interpolate(a, b, percent):
+        """
+        Interpolate from a to b by percent
+        """
+        return a + (b - a) * percent
 
     def ease_in(a, b, percent):
         """
@@ -131,9 +147,9 @@ class Util:
             p['screen']['scale'] = camera_depth / p['camera']['z']
         else:
             p['screen']['scale'] = 0
-        p['screen']['x'] = round((width / 2) + (p['screen']['scale'] * p['camera']['x'] * width / 2))
+        p['screen']['x'] = round((width / 2)  + (p['screen']['scale'] * p['camera']['x'] * width / 2))
         p['screen']['y'] = round((height / 2) - (p['screen']['scale'] * p['camera']['y'] * height / 2))
-        p['screen']['w'] = round((p['screen']['scale'] * roadWidth * width / 2))
+        p['screen']['w'] = round(               (p['screen']['scale'] * roadWidth * width / 2))
 
     def overlap(x1, w1, x2, w2, percent):
         """

@@ -124,6 +124,9 @@ class GameWindow:
             else:                       # slow down if not pressing forward or backward
                 speed = Util.accelerate(speed, decel, delta_time)
 
+            if keys[pygame.K_SPACE]:    # For testing purposes
+                pass
+
             if ((playerX < -1) or (playerX > 1)) and (speed > off_road_limit):
                 speed = Util.accelerate(speed, off_road_decel, delta_time) # driving off road slows you down
             
@@ -139,9 +142,12 @@ class GameWindow:
             """
             Render current game state
             """
-            base_segment = find_segment(position)
-            base_percent = Util.percent_remaining(position, segment_length)
-            maxy = window_height
+            base_segment    = find_segment(position)
+            base_percent    = Util.percent_remaining(position, segment_length)
+            player_segment  = find_segment(position + playerZ)
+            player_percent  = Util.percent_remaining(position + playerZ, segment_length)
+            playerY         = Util.interpolate(player_segment['p1']['world']['y'], player_segment['p2']['world']['y'], player_percent)
+            maxy            = window_height
 
             x = 0
             dx = - (base_segment['curve'] * base_percent)
@@ -159,14 +165,15 @@ class GameWindow:
                 segment['looped'] = segment['index'] < base_segment['index']
                 segment['fog']    = Util.exponential_fog(n/draw_distance, fog_density)
                 
-                Util.project(segment['p1'], (playerX * road_width) - x,      camera_height, position - (track_length if segment['looped'] else 0), camera_depth, window_width, window_height, road_width)
-                Util.project(segment['p2'], (playerX * road_width) - x - dx, camera_height, position - (track_length if segment['looped'] else 0), camera_depth, window_width, window_height, road_width)            
+                Util.project(segment['p1'], (playerX * road_width) - x,      playerY + camera_height, position - (track_length if segment['looped'] else 0), camera_depth, window_width, window_height, road_width)
+                Util.project(segment['p2'], (playerX * road_width) - x - dx, playerY + camera_height, position - (track_length if segment['looped'] else 0), camera_depth, window_width, window_height, road_width)            
 
                 x += dx
                 dx += segment['curve']
 
                 if ((segment['p1']['camera']['z'] <= camera_depth) or
-                    (segment['p2']['screen']['y'] >= maxy)):
+                    (segment['p2']['screen']['y'] >= maxy) or
+                    (segment['p2']['screen']['y'] >= segment['p1']['screen']['y'])):
                     continue
 
                 Render.segment(self.surface, window_width, lanes,
@@ -194,9 +201,9 @@ class GameWindow:
             Render.player(self.surface, window_width, window_height, resolution, road_width, sprites, speed/max_speed,
                           camera_depth/playerZ,
                           window_width/2,
-                          window_height,
+                          (window_height/2) - (camera_depth/playerZ * Util.interpolate(player_segment['p1']['camera']['y'], player_segment['p2']['camera']['y'], player_percent) * window_height/2),
                           steer,
-                          0)
+                          player_segment['p2']['world']['y'] - player_segment['p1']['world']['y'])
 
             
         def frame():
@@ -223,70 +230,105 @@ class GameWindow:
         road = {
             'length': {'none': 0, 'short':  25, 'medium':  50, 'long':  100},
             'curve' : {'none': 0, 'easy':    2, 'medium':   4, 'hard':    6},
+            'hill'  : {'none': 0, 'low':    20, 'medium':  40, 'high':   60},
         }
 
-        def add_road(enter, hold, leave, curve):
+        def add_road(enter, hold, leave, curve, y):
             """
             Add road to track
             """
-            for n in range(enter):
-                add_segment(Util.ease_in(0, curve, n/enter))
-            for n in range(hold):
-                add_segment(curve)
-            for n in range(leave):
-                add_segment(Util.ease_in_out(curve, 0, n/leave))
+            startY = last_y()
+            endY = startY + (Util.to_int(y, 0) * segment_length)
+            total = enter + hold + leave
 
-        def add_segment(curve):
+            for n in range(enter):
+                add_segment((Util.ease_in(0, curve, n/enter)), (Util.ease_in_out(startY, endY, n/total)))
+            for n in range(hold):
+                add_segment(curve, Util.ease_in_out(startY, endY, (enter + n)/total))
+            for n in range(leave):
+                add_segment(Util.ease_in_out(curve, 0, n/leave), Util.ease_in_out(startY, endY, (enter + hold + n)/total))
+
+        def add_segment(curve, y):
             """
             Add segment to road
             """
             n = len(segments)
             segments.append({
                 'index': n,
-                'p1': {'world': {'x':0, 'y':0, 'z': n * segment_length},
+                'p1': {'world': {'x':0, 'y':last_y(), 'z': n * segment_length},
                        'camera': {'x': 0, 'y': 0, 'z': 0},
                        'screen': {'x': 0, 'y': 0, 'w': 0, 'scale': 0}},
-                'p2': {'world': {'x':0, 'y':0, 'z': (n + 1) * segment_length}, 
+                'p2': {'world': {'x':0, 'y': y, 'z': (n + 1) * segment_length}, 
                        'camera': {'x': 0, 'y': 0, 'z': 0}, 
                        'screen': {'x': 0, 'y': 0, 'w': 0, 'scale': 0}},
                 'curve': curve,
                 'color': Colors.dark if math.floor(n/rumble_length) % 2 else Colors.light
             })
 
+        def last_y():
+            """
+            Get last segment y
+            """
+            if (len(segments) == 0): return 0
+            return segments[len(segments) - 1]['p2']['world']['y']
+        
         def add_straight(num):
             num = num or road['length']['medium']
-            add_road(num, num, num, 0)
+            add_road(num, num, num, 0, 0)
 
-        def add_curve(num, curve):
+        def add_curve(num, curve, height):
             num = num or road['length']['medium']
             curve = curve or road['curve']['medium']
-            add_road(num, num, num, curve)
+            height = height or road['hill']['none']
+            add_road(num, num, num, curve, height)
+
+        def add_hill(num, height):
+            num = num or road['length']['medium']
+            height = height or road['hill']['medium']
+            add_road(num, num, num, 0, height)
+
+        def add_downhill_to_end(num):
+            num = num or 200
+            add_road(num, num, num, -road['curve']['easy'], -last_y()/segment_length)
 
         def add_s_curves():
             """
             Add curves to road
             """
-            add_road(road['length']['medium'], road['length']['medium'], road['length']['medium'],  -road['curve']['easy'])
-            add_road(road['length']['medium'], road['length']['medium'], road['length']['medium'],   road['curve']['medium'])
-            add_road(road['length']['medium'], road['length']['medium'], road['length']['medium'],   road['curve']['easy'])
-            add_road(road['length']['medium'], road['length']['medium'], road['length']['medium'],  -road['curve']['easy'])
-            add_road(road['length']['medium'], road['length']['medium'], road['length']['medium'],  -road['curve']['medium'])
+            add_road(road['length']['medium'], road['length']['medium'], road['length']['medium'],  -road['curve']['easy'],    road['hill']['none'])
+            add_road(road['length']['medium'], road['length']['medium'], road['length']['medium'],   road['curve']['medium'],  road['hill']['medium'])
+            add_road(road['length']['medium'], road['length']['medium'], road['length']['medium'],   road['curve']['easy'],   -road['hill']['low'])
+            add_road(road['length']['medium'], road['length']['medium'], road['length']['medium'],  -road['curve']['easy'],    road['hill']['medium'])
+            add_road(road['length']['medium'], road['length']['medium'], road['length']['medium'],  -road['curve']['medium'], -road['hill']['medium'])
+
+        def add_low_rolling_hills(num, height):
+            num = num or road['length']['short']
+            height = height or road['hill']['low']
+
+            add_road(num, num, num, 0, height/2)
+            add_road(num, num, num, 0, -height)
+            add_road(num, num, num, 0, height)
+            add_road(num, num, num, 0, 0)
+            add_road(num, num, num, 0, height/2)
+            add_road(num, num, num, 0, 0)
+
 
         def reset_road():
             global playerZ
             global track_length
             add_straight(road['length']['short'])
-            add_s_curves()
-            add_straight(road['length']['long'])
-            add_curve(road['length']['medium'], road['curve']['medium'])
-            add_curve(road['length']['long'], road['curve']['medium'])
+            add_hill(road['length']['medium'], road['hill']['low'])
+            add_low_rolling_hills(None, None)
+            add_curve(road['length']['medium'], road['curve']['medium'], road['hill']['low'])
+            add_low_rolling_hills(None, None)
+            add_curve(road['length']['long'], road['curve']['medium'], road['hill']['medium'])
             add_straight(None)
-            add_s_curves()
-            add_curve(road['length']['long'], -road['curve']['medium'])
-            add_curve(road['length']['long'], -road['curve']['medium'])
+            add_curve(road['length']['long'], -road['curve']['medium'], road['hill']['medium'])
+            add_hill(road['length']['long'], road['hill']['high'])
+            add_curve(road['length']['long'],-road['curve']['medium'], road['hill']['low'])
+            add_hill(road['length']['long'], -road['hill']['medium'])
             add_straight(None)
-            add_s_curves()
-            add_curve(road['length']['long'], -road['curve']['easy'])
+            add_downhill_to_end(None)
 
             segments[find_segment(playerZ)['index'] + 2]['color'] = Colors.start
             segments[find_segment(playerZ)['index'] + 3]['color'] = Colors.start
