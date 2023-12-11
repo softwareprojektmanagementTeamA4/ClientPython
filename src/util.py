@@ -29,7 +29,7 @@ class Game:
         images = {}
         sprite_sheet = pygame.image.load("media/sprites.png").convert_alpha()
         for name, sprite in sprite_list.items():
-            images[name] = sprite_sheet.subsurface(pygame.Rect(sprite['x'], sprite['y'], sprite['w'], sprite['h']))
+            images[name] = sprite_sheet.subsurface(pygame.Rect(sprite['x'], sprite['y'], sprite['w'], sprite['h'])).convert_alpha()
 
         return images
 
@@ -282,7 +282,7 @@ class Render:
         destH = height
 
         # background = pygame.transform.scale(background, (imageW * 2, imageH))
-        background = pygame.transform.scale(background, (width * 2, height))
+        background = pygame.transform.scale(background, (width * 2, height)).convert_alpha()
         # background = pygame.transform.scale(background, (destW, destH))
         # surface.blit(background, background_pos)
         surface.blit(background, (destX, destY), (sourceX, sourceY, sourceW, sourceH))
