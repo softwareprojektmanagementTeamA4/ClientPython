@@ -154,9 +154,9 @@ class GameWindow:
 
             self.surface.fill('#FFFFFF') # clear screen
             
-            Render.background(self.surface, self.background_sky,   window_width, window_height, Background.sky,   sky_offset)  # Render background sky
-            Render.background(self.surface, self.background_hills, window_width, window_height, Background.hills, hill_offset)
-            Render.background(self.surface, self.background_trees, window_width, window_height, Background.trees, tree_offset)
+            Render.background(self.surface, self.background_sky,   window_width, window_height, Background.sky,   sky_offset,  resolution * sky_speed * playerY)  # Render background sky
+            Render.background(self.surface, self.background_hills, window_width, window_height, Background.hills, hill_offset, resolution * hill_speed * playerY)
+            Render.background(self.surface, self.background_trees, window_width, window_height, Background.trees, tree_offset, resolution * tree_speed * playerY)
 
             # render road
             for n in range(draw_distance):
