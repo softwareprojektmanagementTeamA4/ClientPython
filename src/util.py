@@ -74,6 +74,12 @@ class Util:
         """
         return options[random.randint(0, len(options) - 1)]
 
+    def random_choice_dict(options):
+        """
+        Return random choice from options
+        """
+        return random.choice(list(options.items()))
+
     def interpolate(a, b, percent):
         """
         Interpolate from a to b by percent
@@ -85,6 +91,15 @@ class Util:
         Ease in from a to b by percent
         """
         return a + (b - a) * pow(percent, 2)
+
+    def index_of(array, item):
+        """
+        Return index of item in array
+        """
+        for i in range(len(array)):
+            if (array[i] == item):
+                return i
+        return -1
 
     def ease_out(a, b, percent):
         """
@@ -294,7 +309,7 @@ class Render:
         destX = destX + (destW * (offsetX or 0))
         destY = destY + (destH * (offsetY or 0))
 
-        clipH = math.max(0, destY + destH - clipY) if (clipY) else 0
+        clipH = max(0, destY + destH - clipY) if (clipY) else 0
         if (clipH < destH):
             # rect = (destX, destY, destW, destH - clipH)
             # destW = 1000

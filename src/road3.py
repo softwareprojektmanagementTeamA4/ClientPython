@@ -5,6 +5,8 @@ import pygame
 import sys
 import os
 from util import *
+from sprites import *
+
 
 src_path = os.path.dirname(__file__)
 
@@ -15,7 +17,7 @@ window_width = 1024                # logical window width
 window_height = 768                # logical window height
 centrifugal_force = 0.3            # centrifugal force multiplier when going around curves
 offRoadDecel = 0.99                # speed multiplier when off road (e.g. you lose 2% speed each update frame)
-sky_speed = 0.001                  # background sky layer scroll speed when going around curve (or up hill)
+sky_speed  = 0.001                  # background sky layer scroll speed when going around curve (or up hill)
 hill_speed = 0.002                 # background hill layer scroll speed when going around curve (or up hill)
 tree_speed = 0.003                 # background tree layer scroll speed when going around curve (or up hill)
 sky_offset = 0                     # current sky scroll offset
@@ -99,9 +101,13 @@ class GameWindow:
             """
             global position, speed, playerX, playerZ, sky_offset, hill_offset, tree_offset
             player_segment = find_segment(position + playerZ)
+            playerW = sprite_list['PLAYER_STRAIGHT']['w'] * SPRITE_SCALE
             speed_percent = speed/max_speed
             dx = delta_time * 2 * speed_percent # at top speed, should be able to cross from left to right (-1 to 1) in 1 second
-            
+            start_position = position
+
+            update_cars(delta_time, player_segment, playerW)
+
             position = Util.increase(position, delta_time * speed, track_length)
             
             sky_offset  = Util.increase(sky_offset,  (sky_speed  * player_segment['curve'] * speed_percent), 1)
@@ -127,12 +133,83 @@ class GameWindow:
             if keys[pygame.K_SPACE]:    # For testing purposes
                 pass
 
-            if ((playerX < -1) or (playerX > 1)) and (speed > off_road_limit):
-                speed = Util.accelerate(speed, off_road_decel, delta_time) # driving off road slows you down
+            if ((playerX < -1) or (playerX > 1)):
+
+                if (speed > off_road_limit):
+                    speed = Util.accelerate(speed, off_road_decel, delta_time) # driving off road slows you down
             
+                for n in range(len(player_segment['sprites'])):
+                    sprite = player_segment['sprites'][n]
+                    print (sprite)
+                    spriteW = sprite['source'][1]['w'] * SPRITE_SCALE
+                    x2 = sprite['offset'] + spriteW/2 * (1 if (sprite['offset'] > 0) else -1)
+                    if (Util.overlap(playerX, playerW, x2, spriteW, None)):
+                        speed = max_speed/5
+                        position = Util.increase(player_segment['p1']['world']['z'], -playerZ, track_length) # stop in front of sprite (at front of segment)
+                        break
+
             playerX = Util.limit(playerX, -2, 2) # dont ever let player go too far out of bounds
             speed = Util.limit(speed, 0, max_speed) # or exceed maxSpeed
 
+        def update_cars(delta_time, player_segment, player_w):
+            for n in range(len(cars)):
+                car = cars[n]
+                old_segment = find_segment(car['z'])
+                car['offset'] = car['offset'] + update_car_offset(car, old_segment, player_segment, player_w)
+                car['z'] = Util.increase(car['z'], delta_time * car['speed'], track_length)
+                car['percent'] = Util.percent_remaining(car['z'], segment_length)  # useful for interpolation during rendering phase
+                new_segment = find_segment(car['z'])
+                if (old_segment != new_segment):
+                    index = Util.index_of(old_segment['cars'], car)
+                    old_segment['cars'].pop(index)
+                    new_segment['cars'].append(car)
+
+        def update_car_offset(car, car_segment, player_segment, player_w):
+            lookahead = 20
+            carW = car['sprite'][1]['w'] * SPRITE_SCALE
+            dir = 0
+
+            if (car_segment['index'] - player_segment['index']) > draw_distance:
+                return 0
+            
+            for i in range(1, lookahead):
+                segment = segments[(car_segment['index'] + i) % len(segments)]
+
+                if ((segment == player_segment) and
+                    (car['speed'] > speed) and
+                    (Util.overlap(playerX, player_w, car['offset'], carW, 1.2))):
+                    if playerX > 0.5:
+                        dir = -1
+                    elif playerX < -0.5:
+                        dir = 1
+                    else:
+                        dir = 1 if car['offset'] > playerX else -1
+                    
+                    return dir * 1/i * (car['speed'] - speed)/max_speed # the closer the cars (smaller i) and the greated the speed ratio, the larger the offset
+
+                for j in range(len(segment['cars'])):
+                    otherCar = segment['cars'][j]
+                    otherCarW = otherCar['sprite'][1]['w'] * SPRITE_SCALE
+
+                    if ((car['speed'] > otherCar['speed']) and
+                        (Util.overlap(car['offset'], carW, otherCar['offset'], otherCarW, 1.2))):
+                        if otherCar['offset'] > 0.5:
+                            dir = -1
+                        elif otherCar['offset'] < -0.5:
+                            dir = 1
+                        else:
+                            dir = 1 if car['offset'] > otherCar['offset'] else -1
+                        
+                        return dir * 1/i * (car['speed'] - otherCar['speed'])/max_speed
+
+            # if no cars ahead, but I have somehow ended up off road, then steer back on
+            if (car['offset'] < -0.9):
+                return 0.1
+            elif (car['offset'] > 0.9):
+                return -0.1
+            else:
+                return 0        
+                
 
         ############################################################################################################
         # Render the game world
@@ -164,6 +241,7 @@ class GameWindow:
                 segment           = segments[(base_segment['index'] + n) % len(segments)]
                 segment['looped'] = segment['index'] < base_segment['index']
                 segment['fog']    = Util.exponential_fog(n/draw_distance, fog_density)
+                segment['clip']   = maxy
                 
                 Util.project(segment['p1'], (playerX * road_width) - x,      playerY + camera_height, position - (track_length if segment['looped'] else 0), camera_depth, window_width, window_height, road_width)
                 Util.project(segment['p2'], (playerX * road_width) - x - dx, playerY + camera_height, position - (track_length if segment['looped'] else 0), camera_depth, window_width, window_height, road_width)            
@@ -187,6 +265,21 @@ class GameWindow:
                                segment['color'])
                 
                 maxy = segment['p2']['screen']['y']
+
+            # render sprites
+            for n in range(draw_distance-1, 0, -1):
+                segment = segments[(base_segment['index'] + n) % len(segments)]
+
+                for i in range(len(segment['cars'])):
+                    car = segment['cars'][i]
+                    sprite = car['sprite']
+                    sprite = sprites[car['sprite'][0]]
+                    sprite_scale = Util.interpolate(segment['p1']['screen']['scale'], segment['p2']['screen']['scale'], car['percent'])
+                    spriteX      = Util.interpolate(segment['p1']['screen']['x'],     segment['p2']['screen']['x'],     car['percent']) + (sprite_scale * car['offset'] * road_width * window_width/2)
+                    spriteY      = Util.interpolate(segment['p1']['screen']['y'],     segment['p2']['screen']['y'],     car['percent'])
+                    Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, -0.5, -1, segment['clip']) 
+
+##########################################################################
 
             # render player
             # calc steering
@@ -262,7 +355,18 @@ class GameWindow:
                        'camera': {'x': 0, 'y': 0, 'z': 0}, 
                        'screen': {'x': 0, 'y': 0, 'w': 0, 'scale': 0}},
                 'curve': curve,
+                'sprites': [],
+                'cars': [],
                 'color': Colors.dark if math.floor(n/rumble_length) % 2 else Colors.light
+            })
+
+        def add_sprite(n, sprite, offset):
+            """
+            Add sprite to road
+            """
+            segments[n]['sprites'].append({
+                'source': sprite,
+                'offset': offset
             })
 
         def last_y():
@@ -312,6 +416,15 @@ class GameWindow:
             add_road(num, num, num, 0, height/2)
             add_road(num, num, num, 0, 0)
 
+        def add_bumps():
+            add_road(10, 10, 10,  0,   5)
+            add_road(10, 10, 10,  0,  -2)
+            add_road(10, 10, 10,  0,  -5)
+            add_road(10, 10, 10,  0,   8)
+            add_road(10, 10, 10,  0,   5)
+            add_road(10, 10, 10,  0,  -7)
+            add_road(10, 10, 10,  0,   5)
+            add_road(10, 10, 10,  0,  -2)
 
         def reset_road():
             global playerZ
@@ -319,6 +432,7 @@ class GameWindow:
             add_straight(road['length']['short'])
             add_hill(road['length']['medium'], road['hill']['low'])
             add_low_rolling_hills(None, None)
+            add_bumps()
             add_curve(road['length']['medium'], road['curve']['medium'], road['hill']['low'])
             add_low_rolling_hills(None, None)
             add_curve(road['length']['long'], road['curve']['medium'], road['hill']['medium'])
@@ -330,6 +444,9 @@ class GameWindow:
             add_straight(None)
             add_downhill_to_end(None)
 
+            reset_sprites()
+            reset_cars()
+
             segments[find_segment(playerZ)['index'] + 2]['color'] = Colors.start
             segments[find_segment(playerZ)['index'] + 3]['color'] = Colors.start
 
@@ -337,6 +454,65 @@ class GameWindow:
                 segments[len(segments) - 1 - n]['color'] = Colors.finish
 
             track_length = len(segments) * segment_length
+
+        def reset_sprites():
+            """
+            Reset and setup sprites
+            """
+
+            add_sprite(20,  sprite_list['BILLBOARD07'], -1)
+            add_sprite(40,  sprite_list['BILLBOARD06'], -1)
+            add_sprite(60,  sprite_list['BILLBOARD08'], -1)
+            add_sprite(80,  sprite_list['BILLBOARD09'], -1)
+            add_sprite(100, sprite_list['BILLBOARD01'], -1)
+            add_sprite(120, sprite_list['BILLBOARD02'], -1)
+            add_sprite(140, sprite_list['BILLBOARD03'], -1)
+            add_sprite(160, sprite_list['BILLBOARD04'], -1)
+            add_sprite(180, sprite_list['BILLBOARD05'], -1)
+
+            add_sprite(240, sprite_list['BILLBOARD07'], -1.2)
+            add_sprite(240, sprite_list['BILLBOARD06'],  1.2)
+            add_sprite(len(segments) - 25, sprite_list['BILLBOARD07'], -1.2)
+            add_sprite(len(segments) - 25, sprite_list['BILLBOARD06'],  1.2)
+
+            m = 10
+            while m < 200:
+                add_sprite(m, sprite_list['PALM_TREE'], 0.5 + random.random()*0.5)
+                add_sprite(m, sprite_list['PALM_TREE'],   1 + random.random()*2)
+                m += 4 + math.floor(m/100)
+
+            # for n in range(10, 200, 4 + math.floor(n/100)):
+            #     add_sprite(n, sprite_list['PALM_TREE'], 0.5 + random.random()*0.5)
+            #     add_sprite(n, sprite_list['PALM_TREE'],   1 + random.random()*2)
+
+            for n in range(250, 1000, 5):
+                add_sprite(n,     sprite_list['COLUMN'], 1.1)
+                add_sprite(n + Util.random_int(0,5), sprite_list['TREE1'], -1 - (random.random() * 2))
+                add_sprite(n + Util.random_int(0,5), sprite_list['TREE2'], -1 - (random.random() * 2))
+
+            for n in range(200, len(segments), 3):
+                add_sprite(n, Util.random_choice_dict(sprite_list_plants), Util.random_choice([-1,1]) * (2 + random.random() * 5))
+
+            for n in range(1000, len(segments)-50, 100):
+                side = Util.random_choice([1, -1])
+                add_sprite(n + Util.random_int(0, 50), Util.random_choice_dict(sprite_list_billboards), -side)
+                for i in range(20):
+                    sprite = Util.random_choice_dict(sprite_list_plants)
+                    offset = side * (1.5 + random.random())
+                    add_sprite(n + Util.random_int(0, 50), sprite, offset)
+        
+        def reset_cars():
+            global cars
+            cars = []
+            for n in range(total_cars):
+                offset = random.random() * Util.random_choice([-0.8, 0.8])
+                z = math.floor(random.random() * len(segments)) * segment_length
+                sprite = Util.random_choice_dict(sprite_list_cars)
+                speed = max_speed/4 + random.random() * max_speed/(4 if sprite == sprite_list_cars['SEMI'] else 2)
+                car = {'offset': offset, 'z': z, 'sprite': sprite, 'speed': speed}
+                segment = find_segment(car['z'])
+                segment['cars'].append(car)
+                cars.append(car)
 
 
         # reset_road version straight
