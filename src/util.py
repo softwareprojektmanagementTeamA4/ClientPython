@@ -27,7 +27,7 @@ class Game:
         Load images
         """
         images = {}
-        sprite_sheet = pygame.image.load("media/sprites.png")
+        sprite_sheet = pygame.image.load("media/sprites.png").convert_alpha()
         for name, sprite in sprite_list.items():
             images[name] = sprite_sheet.subsurface(pygame.Rect(sprite['x'], sprite['y'], sprite['w'], sprite['h']))
 
@@ -73,6 +73,12 @@ class Util:
         Return random choice from options
         """
         return options[random.randint(0, len(options) - 1)]
+    
+    def random_key(options):
+        """
+        Return random key from options
+        """
+        return random.choice(list(options.keys()))
 
     def random_choice_dict(options):
         """

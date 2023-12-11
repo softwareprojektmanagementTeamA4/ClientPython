@@ -140,7 +140,6 @@ class GameWindow:
             
                 for n in range(len(player_segment['sprites'])):
                     sprite = player_segment['sprites'][n]
-                    print (sprite)
                     spriteW = sprite['source'][1]['w'] * SPRITE_SCALE
                     x2 = sprite['offset'] + spriteW/2 * (1 if (sprite['offset'] > 0) else -1)
                     if (Util.overlap(playerX, playerW, x2, spriteW, None)):
@@ -267,36 +266,44 @@ class GameWindow:
                 maxy = segment['p2']['screen']['y']
 
             # render sprites
-            for n in range(draw_distance-1, 0, -1):
+            for n in range(draw_distance-1, 1, -1):
                 segment = segments[(base_segment['index'] + n) % len(segments)]
 
                 for i in range(len(segment['cars'])):
-                    car = segment['cars'][i]
-                    sprite = car['sprite']
-                    sprite = sprites[car['sprite'][0]]
+                    car          = segment['cars'][i]
+                    sprite       = sprites[car['sprite'][0]]
                     sprite_scale = Util.interpolate(segment['p1']['screen']['scale'], segment['p2']['screen']['scale'], car['percent'])
                     spriteX      = Util.interpolate(segment['p1']['screen']['x'],     segment['p2']['screen']['x'],     car['percent']) + (sprite_scale * car['offset'] * road_width * window_width/2)
                     spriteY      = Util.interpolate(segment['p1']['screen']['y'],     segment['p2']['screen']['y'],     car['percent'])
                     Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, -0.5, -1, segment['clip']) 
 
-##########################################################################
+                for i in range(len(segment['sprites'])):
+                    sprite       = sprites[(segment['sprites'][i]['source'][0])]
+                    sprite_scale = segment['p1']['screen']['scale']
+                    spriteX      = segment['p1']['screen']['x'] + (sprite_scale * segment['sprites'][i]['offset'] * road_width * window_width/2)
+                    spriteY      = segment['p1']['screen']['y']
+                    offsetX      = -1 if (segment['sprites'][i]['offset'] < 0) else 0
+                    Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, offsetX, -1, segment['clip'])
 
-            # render player
-            # calc steering
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_LEFT]:
-                steer = speed * -1
-            elif keys[pygame.K_RIGHT]:
-                steer = speed
-            else:
-                steer = 0
+                # render player
+                if (segment == player_segment):
+                    # calc steering
+                    keys = pygame.key.get_pressed()
+                    if keys[pygame.K_LEFT]:
+                        steer = speed * -1
+                    elif keys[pygame.K_RIGHT]:
+                        steer = speed
+                    else:
+                        steer = 0
 
-            Render.player(self.surface, window_width, window_height, resolution, road_width, sprites, speed/max_speed,
-                          camera_depth/playerZ,
-                          window_width/2,
-                          (window_height/2) - (camera_depth/playerZ * Util.interpolate(player_segment['p1']['camera']['y'], player_segment['p2']['camera']['y'], player_percent) * window_height/2),
-                          steer,
-                          player_segment['p2']['world']['y'] - player_segment['p1']['world']['y'])
+                    Render.player(self.surface, window_width, window_height, resolution, road_width, sprites, speed/max_speed,
+                                camera_depth/playerZ,
+                                window_width/2,
+                                (window_height/2) - (camera_depth/playerZ * Util.interpolate(player_segment['p1']['camera']['y'], player_segment['p2']['camera']['y'], player_percent) * window_height/2),
+                                steer,
+                                player_segment['p2']['world']['y'] - player_segment['p1']['world']['y'])
+
+
 
             
         def frame():
@@ -459,47 +466,54 @@ class GameWindow:
             """
             Reset and setup sprites
             """
+            add_sprite(20, ('BILLBOARD07', sprite_list['BILLBOARD07']) , -1)
+            add_sprite(40, ('BILLBOARD06', sprite_list['BILLBOARD06']) , -1)
+            add_sprite(60, ('BILLBOARD08', sprite_list['BILLBOARD08']) , -1)
+            add_sprite(80, ('BILLBOARD09', sprite_list['BILLBOARD09']) , -1)
+            add_sprite(100, ('BILLBOARD01', sprite_list['BILLBOARD01']), -1)
+            add_sprite(120, ('BILLBOARD02', sprite_list['BILLBOARD02']), -1)
+            add_sprite(140, ('BILLBOARD03', sprite_list['BILLBOARD03']), -1)
+            add_sprite(160, ('BILLBOARD04', sprite_list['BILLBOARD04']), -1)
+            add_sprite(180, ('BILLBOARD05', sprite_list['BILLBOARD05']), -1)
 
-            add_sprite(20,  sprite_list['BILLBOARD07'], -1)
-            add_sprite(40,  sprite_list['BILLBOARD06'], -1)
-            add_sprite(60,  sprite_list['BILLBOARD08'], -1)
-            add_sprite(80,  sprite_list['BILLBOARD09'], -1)
-            add_sprite(100, sprite_list['BILLBOARD01'], -1)
-            add_sprite(120, sprite_list['BILLBOARD02'], -1)
-            add_sprite(140, sprite_list['BILLBOARD03'], -1)
-            add_sprite(160, sprite_list['BILLBOARD04'], -1)
-            add_sprite(180, sprite_list['BILLBOARD05'], -1)
+            add_sprite(240, ('BILLBOARD07', sprite_list['BILLBOARD07']), -1.2)
+            add_sprite(240, ('BILLBOARD06', sprite_list['BILLBOARD06']),  1.2)
+            add_sprite(len(segments) - 25, ('BILLBOARD07', sprite_list['BILLBOARD07']), -1.2)
+            add_sprite(len(segments) - 25, ('BILLBOARD06', sprite_list['BILLBOARD06']),  1.2)
 
-            add_sprite(240, sprite_list['BILLBOARD07'], -1.2)
-            add_sprite(240, sprite_list['BILLBOARD06'],  1.2)
-            add_sprite(len(segments) - 25, sprite_list['BILLBOARD07'], -1.2)
-            add_sprite(len(segments) - 25, sprite_list['BILLBOARD06'],  1.2)
+            # m = 10
+            # while m < 200:
+            #     add_sprite(m, ('PALM_TREE', sprite_list['PALM_TREE']), 0.5 + random.random()*0.5)
+            #     add_sprite(m, ('PALM_TREE', sprite_list['PALM_TREE']),   1 + random.random()*2)
+            #     m += 4 + math.floor(m/100)
 
-            m = 10
-            while m < 200:
-                add_sprite(m, sprite_list['PALM_TREE'], 0.5 + random.random()*0.5)
-                add_sprite(m, sprite_list['PALM_TREE'],   1 + random.random()*2)
-                m += 4 + math.floor(m/100)
-
-            # for n in range(10, 200, 4 + math.floor(n/100)):
-            #     add_sprite(n, sprite_list['PALM_TREE'], 0.5 + random.random()*0.5)
-            #     add_sprite(n, sprite_list['PALM_TREE'],   1 + random.random()*2)
+            # # # for n in range(10, 200, 4 + math.floor(n/100)):
+            # # #     add_sprite(n, ('PALM_TREE', sprite_list['PALM_TREE']), 0.5 + random.random()*0.5)
+            # # #     add_sprite(n, ('PALM_TREE', sprite_list['PALM_TREE']),   1 + random.random()*2)
 
             for n in range(250, 1000, 5):
-                add_sprite(n,     sprite_list['COLUMN'], 1.1)
-                add_sprite(n + Util.random_int(0,5), sprite_list['TREE1'], -1 - (random.random() * 2))
-                add_sprite(n + Util.random_int(0,5), sprite_list['TREE2'], -1 - (random.random() * 2))
+                add_sprite(n, ('COLUMN', sprite_list['COLUMN']), 1.1)
+                add_sprite(n + Util.random_int(0,5), ('TREE1', sprite_list['TREE1']), -1 - (random.random() * 2))
+                add_sprite(n + Util.random_int(0,5), ('TREE2', sprite_list['TREE2']), -1 - (random.random() * 2))
 
             for n in range(200, len(segments), 3):
-                add_sprite(n, Util.random_choice_dict(sprite_list_plants), Util.random_choice([-1,1]) * (2 + random.random() * 5))
+                random_key = Util.random_key(sprite_list_plants)
+                add_sprite(n, (random_key, sprite_list[random_key]), Util.random_choice([-1,1]) * (2 + random.random() * 5))
 
             for n in range(1000, len(segments)-50, 100):
                 side = Util.random_choice([1, -1])
-                add_sprite(n + Util.random_int(0, 50), Util.random_choice_dict(sprite_list_billboards), -side)
+                random_key = Util.random_key(sprite_list_billboards)
+                add_sprite(n + Util.random_int(0, 50), (random_key, sprite_list[random_key]), -side * (1.5 + random.random()))
                 for i in range(20):
-                    sprite = Util.random_choice_dict(sprite_list_plants)
+                    random_key = Util.random_key(sprite_list_plants)
+                    sprite = (random_key, sprite_list[random_key])
                     offset = side * (1.5 + random.random())
                     add_sprite(n + Util.random_int(0, 50), sprite, offset)
+
+####################################### Debugging  ##############################################
+            # for n in range(len(segments)):
+            #     print (n, segments[n]['sprites'])
+            #     time.sleep(0.2)
         
         def reset_cars():
             global cars
@@ -513,27 +527,6 @@ class GameWindow:
                 segment = find_segment(car['z'])
                 segment['cars'].append(car)
                 cars.append(car)
-
-
-        # reset_road version straight
-        # def reset_road():
-        #     """
-        #     Reset and setup road
-        #     """
-        #     global track_length
-        #     for n in range(1, road_length):
-        #         segments.append({
-        #             'index': n,
-        #             'p1': {'world': {'x':0, 'y':0, 'z': n * segment_length},
-        #                    'camera': {'x': 0, 'y': 0, 'z': 0},
-        #                    'screen': {'x': 0, 'y': 0, 'w': 0, 'scale': 0}},
-        #             'p2': {'world': {'x':0, 'y':0, 'z': (n + 1) * segment_length}, 
-        #                    'camera': {'x': 0, 'y': 0, 'z': 0}, 
-        #                    'screen': {'x': 0, 'y': 0, 'w': 0, 'scale': 0}},
-        #             'color': Colors.dark if math.floor(n/rumble_length) % 2 else Colors.light
-        #         })
-            
-        #     track_length = len(segments) * segment_length
 
         def reset():
 
@@ -563,10 +556,11 @@ class GameWindow:
         sprites = Game.load_images()
         reset()
         # main game loop
-        while True:
+        while 1:
             self.clock.tick(fps)
             frame()
-            pygame.display.update()
+            # pygame.display.update()
+            pygame.display.flip()
 
             # handle quit event
             for event in pygame.event.get([pygame.QUIT]):
