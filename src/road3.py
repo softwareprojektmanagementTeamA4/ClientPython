@@ -110,9 +110,9 @@ class GameWindow:
 
             position = Util.increase(position, delta_time * speed, track_length)
             
-            sky_offset  = Util.increase(sky_offset,  (sky_speed  * player_segment['curve'] * speed_percent), 1)
-            hill_offset = Util.increase(hill_offset, (hill_speed * player_segment['curve'] * speed_percent), 1)
-            tree_offset = Util.increase(tree_offset, (tree_speed * player_segment['curve'] * speed_percent), 1)
+            sky_offset  = Util.increase(sky_offset, sky_speed * player_segment['curve'] * (position - start_position)/segment_length, 1)
+            hill_offset = Util.increase(hill_offset, hill_speed * player_segment['curve'] * (position - start_position)/segment_length, 1)
+            tree_offset = Util.increase(tree_offset, tree_speed * player_segment['curve'] * (position - start_position)/segment_length, 1)
 
             # input handling
             keys = pygame.key.get_pressed()
