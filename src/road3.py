@@ -147,6 +147,17 @@ class GameWindow:
                         position = Util.increase(player_segment['p1']['world']['z'], -playerZ, track_length) # stop in front of sprite (at front of segment)
                         break
 
+            for n in range(len(player_segment['cars'])):
+                car = player_segment['cars'][n]
+                carW = car['sprite'][1]['w'] * SPRITE_SCALE
+                if (speed > car['speed']):
+                    if (Util.overlap(playerX, playerW, car['offset'], carW, 0.8)):
+                        speed = car['speed'] * (car['speed']/speed)
+                        position = Util.increase(car['z'], -playerZ, track_length)
+                        break
+
+
+
             playerX = Util.limit(playerX, -2, 2) # dont ever let player go too far out of bounds
             speed = Util.limit(speed, 0, max_speed) # or exceed maxSpeed
 
@@ -266,7 +277,7 @@ class GameWindow:
                 maxy = segment['p2']['screen']['y']
 
             # render sprites
-            for n in range(draw_distance-1, 1, -1):
+            for n in range((draw_distance-1), 2, -1):
                 segment = segments[(base_segment['index'] + n) % len(segments)]
 
                 for i in range(len(segment['cars'])):
