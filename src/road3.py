@@ -6,6 +6,7 @@ import sys
 import os
 from util import *
 from sprites import *
+import pickle
 
 
 src_path = os.path.dirname(__file__)
@@ -132,7 +133,10 @@ class GameWindow:
                 speed = Util.accelerate(speed, decel, delta_time)
 
             if keys[pygame.K_SPACE]:    # For testing purposes
-                pass
+                print (len(scaled_sprites_cache))
+            if keys[pygame.K_w]:        # For testing purposes
+                with open('scaled_sprites_cache.pickle', 'wb') as file:
+                    pickle.dump(scaled_sprites_cache, file)
 
             if ((playerX < -1) or (playerX > 1)):
 
@@ -242,9 +246,9 @@ class GameWindow:
 
             self.surface.fill('#FFFFFF') # clear screen
             
-            Render.background(self.surface, self.background_sky,   window_width, window_height, Background.sky,   sky_offset,  resolution * sky_speed * playerY)  # Render background sky
-            Render.background(self.surface, self.background_hills, window_width, window_height, Background.hills, hill_offset, resolution * hill_speed * playerY)
-            Render.background(self.surface, self.background_trees, window_width, window_height, Background.trees, tree_offset, resolution * tree_speed * playerY)
+            # Render.background(self.surface, self.background_sky,   window_width, window_height, Background.sky,   sky_offset,  resolution * sky_speed * playerY)  # Render background sky
+            # Render.background(self.surface, self.background_hills, window_width, window_height, Background.hills, hill_offset, resolution * hill_speed * playerY)
+            # Render.background(self.surface, self.background_trees, window_width, window_height, Background.trees, tree_offset, resolution * tree_speed * playerY)
 
             # render road
             for n in range(draw_distance):
@@ -494,26 +498,26 @@ class GameWindow:
             add_sprite(len(segments) - 25, ('BILLBOARD07', sprite_list['BILLBOARD07']), -1.2)
             add_sprite(len(segments) - 25, ('BILLBOARD06', sprite_list['BILLBOARD06']),  1.2)
 
-            # m = 10
-            # while m < 200:
-            #     add_sprite(m, ('PALM_TREE', sprite_list['PALM_TREE']), 0.5 + random.random()*0.5)
-            #     add_sprite(m, ('PALM_TREE', sprite_list['PALM_TREE']),   1 + random.random()*2)
-            #     m += 4 + math.floor(m/100)
+            m = 10
+            while m < 200:
+                add_sprite(m, ('PALM_TREE', sprite_list['PALM_TREE']), 0.5 + random.random()*0.5)
+                add_sprite(m, ('PALM_TREE', sprite_list['PALM_TREE']),   1 + random.random()*2)
+                m += 4 + math.floor(m/100)
 
             # # # for n in range(10, 200, 4 + math.floor(n/100)):
             # # #     add_sprite(n, ('PALM_TREE', sprite_list['PALM_TREE']), 0.5 + random.random()*0.5)
             # # #     add_sprite(n, ('PALM_TREE', sprite_list['PALM_TREE']),   1 + random.random()*2)
 
-            for n in range(250, 1000, 5):
+            for n in range(250, 1000, 50):
                 add_sprite(n, ('COLUMN', sprite_list['COLUMN']), 1.1)
                 add_sprite(n + Util.random_int(0,5), ('TREE1', sprite_list['TREE1']), -1 - (random.random() * 2))
                 add_sprite(n + Util.random_int(0,5), ('TREE2', sprite_list['TREE2']), -1 - (random.random() * 2))
 
-            for n in range(200, len(segments), 3):
+            for n in range(200, len(segments), 30):
                 random_key = Util.random_key(sprite_list_plants)
                 add_sprite(n, (random_key, sprite_list[random_key]), Util.random_choice([-1,1]) * (2 + random.random() * 5))
 
-            for n in range(1000, len(segments)-50, 100):
+            for n in range(1000, len(segments)-50, 500):
                 side = Util.random_choice([1, -1])
                 random_key = Util.random_key(sprite_list_billboards)
                 add_sprite(n + Util.random_int(0, 50), (random_key, sprite_list[random_key]), -side * (1.5 + random.random()))
