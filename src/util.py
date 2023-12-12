@@ -291,7 +291,7 @@ class Render:
             surface.blit(background, (layer['x'], sourceY), (imageW-sourceW, sourceH, destW-1, destH))
             # surface.blit(background, (destW-1, destY), (layer['x'], sourceY, imageW-sourceW, sourceH))
 
-    def player(surface, width, height, resolution, roadWidth, sprites, speed_percent, scale, destX, destY, steer, updown):
+    def player(surface, width, height, resolution, roadWidth, sprites, speed_percent, scale, destX, destY, steer, updown, sprite_cache):
         """
         Draw player
         """
@@ -303,9 +303,18 @@ class Render:
         else:
             sprite = sprites['PLAYER_UPHILL_STRAIGHT'] if updown > 0 else sprites['PLAYER_STRAIGHT']
 
-        Render.sprite(surface, width, height, resolution, roadWidth, sprite, scale, destX, destY + bounce, -0.5, -1, 0)
+        Render.sprite(surface, width, height, resolution, roadWidth, sprite, scale, destX, destY + bounce, -0.5, -1, 0, sprite_cache)
 
-    def sprite(surface, width, height, resolution, roadWidth, sprite, scale, destX, destY, offsetX, offsetY, clipY):
+    def get_scaled_sprite(sprite, destW, destH, scaled_sprites_cache):
+        """
+        Return scaled sprite
+        """
+        key = (sprite, destW, destH)
+        if key not in scaled_sprites_cache:
+            scaled_sprites_cache[key] = pygame.transform.scale(sprite, (destW, destH))
+        return scaled_sprites_cache[key]
+
+    def sprite(surface, width, height, resolution, roadWidth, sprite, scale, destX, destY, offsetX, offsetY, clipY, scaled_sprites_cache):
         """
         Draw sprite
         """
@@ -320,7 +329,7 @@ class Render:
             # rect = (destX, destY, destW, destH - clipH)
             # destW = 1000
             # destH = 1000
-            sprite = pygame.transform.scale(sprite, (destW, destH))
+            sprite = Render.get_scaled_sprite(sprite, destW, destH, scaled_sprites_cache)
 
             # surface.blit(sprite, (destX, destY))
             # surface.blit(sprite, (destX, destY), (0, 0, destW, destH - clipH))

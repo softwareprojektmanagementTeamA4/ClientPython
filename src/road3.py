@@ -27,6 +27,7 @@ segments = []                      # array of road segments
 cars = []                          # array of cars on the road
 # background = None                  # our background image (loaded below)
 sprites = None                     # our spritesheet (loaded below)
+scaled_sprites_cache = {}          # cache for scaled sprites
 resolution = None                  # scaling factor for multi-resolution support
 road_width = 2000                  # actually half the roads width, easier math if the road spans from -roadWidth to +roadWidth
 segment_length = 200               # length of a single segment
@@ -286,7 +287,7 @@ class GameWindow:
                     sprite_scale = Util.interpolate(segment['p1']['screen']['scale'], segment['p2']['screen']['scale'], car['percent'])
                     spriteX      = Util.interpolate(segment['p1']['screen']['x'],     segment['p2']['screen']['x'],     car['percent']) + (sprite_scale * car['offset'] * road_width * window_width/2)
                     spriteY      = Util.interpolate(segment['p1']['screen']['y'],     segment['p2']['screen']['y'],     car['percent'])
-                    Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, -0.5, -1, segment['clip']) 
+                    Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, -0.5, -1, segment['clip'], scaled_sprites_cache) 
 
                 for i in range(len(segment['sprites'])):
                     sprite       = sprites[(segment['sprites'][i]['source'][0])]
@@ -294,7 +295,7 @@ class GameWindow:
                     spriteX      = segment['p1']['screen']['x'] + (sprite_scale * segment['sprites'][i]['offset'] * road_width * window_width/2)
                     spriteY      = segment['p1']['screen']['y']
                     offsetX      = -1 if (segment['sprites'][i]['offset'] < 0) else 0
-                    Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, offsetX, -1, segment['clip'])
+                    Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, offsetX, -1, segment['clip'], scaled_sprites_cache)
 
                 # render player
                 if (segment == player_segment):
@@ -312,7 +313,8 @@ class GameWindow:
                                 window_width/2,
                                 (window_height/2) - (camera_depth/playerZ * Util.interpolate(player_segment['p1']['camera']['y'], player_segment['p2']['camera']['y'], player_percent) * window_height/2),
                                 steer,
-                                player_segment['p2']['world']['y'] - player_segment['p1']['world']['y'])
+                                player_segment['p2']['world']['y'] - player_segment['p1']['world']['y'],
+                                scaled_sprites_cache)
 
 
 
