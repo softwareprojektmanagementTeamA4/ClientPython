@@ -1,3 +1,5 @@
+import sys
+
 import pygame
 import socketio
 import menue
@@ -15,6 +17,8 @@ font = pygame.font.SysFont('Georgia', 24, bold=False)
 connectmenue = True
 menueactive = False
 connectEnter = False
+settingsactive = False
+offlinemode = False
 
 username_input_box = menue.TextInputBox(WIDTH/2, (HEIGHT/2) - 70, 400, font)
 input_group = pygame.sprite.Group(username_input_box)
@@ -60,10 +64,13 @@ while run:
     screen.fill('blue')
     timer.tick(fps)
 
-    input_group.update(pygame.event.get())
-    for event in pygame.event.get():
+    events = pygame.event.get()
+
+    input_group.update(events)
+    for event in events:
         if event.type == pygame.QUIT:
             run = False
+
 
     # Der User muss sich mit dem Server Connecten und ist somit im Login Screen.
     if connectmenue:
@@ -74,6 +81,7 @@ while run:
         # Prüft ob der User den Connect-Button gedrückt hat oder das Eingabefeld durch Enter bestätigt hat
         if connect_button.button.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0] or username_input_box.enterpressed:
             connectmenue = False
+            username_input_box.enterpressed = False
             username = username_input_box.text
             try:
                 sio.connect('http://3.71.101.250:3000/', headers={'username': username})
@@ -84,24 +92,38 @@ while run:
             # Andernfalls wird der User über die fehlerhafte Verbindung informiert und geht zurück in den Login Screen.
             if sio.connected:
                 menueactive = True
+                offlinemode = False
             else:
                 screen.fill('light blue')
+                print("1")
                 status = font.render('Connection failed ', True, 'red')
                 screen.blit(status, (connect_button.button.midleft[0], connect_button.button.midleft[1] - 15))
                 pygame.display.flip()
                 pygame.time.delay(3000)
-                connectmenue = True
-                username_input_box.enterpressed = False
+                menueactive = True
+                offlinemode = True
     # Der User ist im Hauptmenü.
     if menueactive:
         # Zeichnet alle User die Online sind, oben links in die Ecke
-        status = font.render('Connected to Server ', True, 'black')
-        screen.blit(status, (0,0))
-        i = 25
-        for users in usernames:
-            online = font.render(users + ' Online', True, 'green')
-            screen.blit(online, (0, i))
-            i += 25
+        if not offlinemode:
+            status = font.render('Connected to Server ', True, 'black')
+            screen.blit(status, (0,0))
+            i = 25
+            for users in usernames:
+                online = font.render(users + ' Online', True, 'green')
+                screen.blit(online, (0, i))
+                i += 25
+        else:
+            status = font.render('Offlinemode ', True, 'red')
+            screen.blit(status, (0, 0))
+            reconnect_button = menue.Button('Reconnect', WIDTH / 2, (HEIGHT / 2) + 130, screen)
+            reconnect_button.draw()
+
+            if reconnect_button.button.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0]:
+                menueactive = False
+                offlinemode = False
+                connectmenue = True
+                username_input_box.enterpressed = True
 
         start_button = menue.Button('Start', WIDTH/2, (HEIGHT/2) - 65, screen)
         start_button.draw()
@@ -115,13 +137,17 @@ while run:
             ## Starte das Spiel
             pass
         if settings_button.button.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0]:
-            ## Zeige die Einstellungen
+            settingsactive = True
             pass
         if quit_button.button.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0]:
             run = False
+
+    if settingsactive:
+        pass
 
     pygame.display.flip()
 
 sio.disconnect()
 pygame.quit()
+sys.exit()
 
