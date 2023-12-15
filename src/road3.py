@@ -6,7 +6,6 @@ import sys
 import os
 from util import *
 from sprites import *
-import pickle
 
 
 src_path = os.path.dirname(__file__)
@@ -28,7 +27,6 @@ segments = []                      # array of road segments
 cars = []                          # array of cars on the road
 # background = None                  # our background image (loaded below)
 sprites = None                     # our spritesheet (loaded below)
-scaled_sprites_cache = {}          # cache for scaled sprites
 resolution = None                  # scaling factor for multi-resolution support
 road_width = 2000                  # actually half the roads width, easier math if the road spans from -roadWidth to +roadWidth
 segment_length = 200               # length of a single segment
@@ -133,10 +131,9 @@ class GameWindow:
                 speed = Util.accelerate(speed, decel, delta_time)
 
             if keys[pygame.K_SPACE]:    # For testing purposes
-                print (len(scaled_sprites_cache))
+                speed *= 2
             if keys[pygame.K_w]:        # For testing purposes
-                with open('scaled_sprites_cache.pickle', 'wb') as file:
-                    pickle.dump(scaled_sprites_cache, file)
+                pass
 
             if ((playerX < -1) or (playerX > 1)):
 
@@ -246,9 +243,9 @@ class GameWindow:
 
             self.surface.fill('#FFFFFF') # clear screen
             
-            # Render.background(self.surface, self.background_sky,   window_width, window_height, Background.sky,   sky_offset,  resolution * sky_speed * playerY)  # Render background sky
-            # Render.background(self.surface, self.background_hills, window_width, window_height, Background.hills, hill_offset, resolution * hill_speed * playerY)
-            # Render.background(self.surface, self.background_trees, window_width, window_height, Background.trees, tree_offset, resolution * tree_speed * playerY)
+            Render.background(self.surface, self.background_sky,   window_width, window_height, Background.sky,   sky_offset,  resolution * sky_speed * playerY)  # Render background sky
+            Render.background(self.surface, self.background_hills, window_width, window_height, Background.hills, hill_offset, resolution * hill_speed * playerY)
+            Render.background(self.surface, self.background_trees, window_width, window_height, Background.trees, tree_offset, resolution * tree_speed * playerY)
 
             # render road
             for n in range(draw_distance):
@@ -291,7 +288,7 @@ class GameWindow:
                     sprite_scale = Util.interpolate(segment['p1']['screen']['scale'], segment['p2']['screen']['scale'], car['percent'])
                     spriteX      = Util.interpolate(segment['p1']['screen']['x'],     segment['p2']['screen']['x'],     car['percent']) + (sprite_scale * car['offset'] * road_width * window_width/2)
                     spriteY      = Util.interpolate(segment['p1']['screen']['y'],     segment['p2']['screen']['y'],     car['percent'])
-                    Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, -0.5, -1, segment['clip'], scaled_sprites_cache) 
+                    Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, -0.5, -1, segment['clip']) 
 
                 for i in range(len(segment['sprites'])):
                     sprite       = sprites[(segment['sprites'][i]['source'][0])]
@@ -299,7 +296,7 @@ class GameWindow:
                     spriteX      = segment['p1']['screen']['x'] + (sprite_scale * segment['sprites'][i]['offset'] * road_width * window_width/2)
                     spriteY      = segment['p1']['screen']['y']
                     offsetX      = -1 if (segment['sprites'][i]['offset'] < 0) else 0
-                    Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, offsetX, -1, segment['clip'], scaled_sprites_cache)
+                    Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, offsetX, -1, segment['clip'])
 
                 # render player
                 if (segment == player_segment):
@@ -317,8 +314,7 @@ class GameWindow:
                                 window_width/2,
                                 (window_height/2) - (camera_depth/playerZ * Util.interpolate(player_segment['p1']['camera']['y'], player_segment['p2']['camera']['y'], player_percent) * window_height/2),
                                 steer,
-                                player_segment['p2']['world']['y'] - player_segment['p1']['world']['y'],
-                                scaled_sprites_cache)
+                                player_segment['p2']['world']['y'] - player_segment['p1']['world']['y'])
 
 
 
@@ -453,6 +449,7 @@ class GameWindow:
         def reset_road():
             global playerZ
             global track_length
+            # segments = []
             add_straight(road['length']['short'])
             add_hill(road['length']['medium'], road['hill']['low'])
             add_low_rolling_hills(None, None)
@@ -498,11 +495,11 @@ class GameWindow:
             add_sprite(len(segments) - 25, ('BILLBOARD07', sprite_list['BILLBOARD07']), -1.2)
             add_sprite(len(segments) - 25, ('BILLBOARD06', sprite_list['BILLBOARD06']),  1.2)
 
-            m = 10
-            while m < 200:
-                add_sprite(m, ('PALM_TREE', sprite_list['PALM_TREE']), 0.5 + random.random()*0.5)
-                add_sprite(m, ('PALM_TREE', sprite_list['PALM_TREE']),   1 + random.random()*2)
-                m += 4 + math.floor(m/100)
+            # m = 10
+            # while m < 200:
+            #     add_sprite(m, ('PALM_TREE', sprite_list['PALM_TREE']), 0.5 + random.random()*0.5)
+            #     add_sprite(m, ('PALM_TREE', sprite_list['PALM_TREE']),   1 + random.random()*2)
+            #     m += 4 + math.floor(m/100)
 
             # # # for n in range(10, 200, 4 + math.floor(n/100)):
             # # #     add_sprite(n, ('PALM_TREE', sprite_list['PALM_TREE']), 0.5 + random.random()*0.5)
