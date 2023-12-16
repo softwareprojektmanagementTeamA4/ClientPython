@@ -268,12 +268,12 @@ class Render:
         rotation = rotation or 0
         background_offset = offset or 0
 
-        imageW = layer['w']*10
+        imageW = layer['w']
         imageH = layer['h']
 
         sourceX = layer['x'] + math.floor(layer['w'] * rotation)
         sourceY = layer['y']
-        sourceW = min(imageW, layer['x'] + layer['w'] - sourceX)
+        sourceW = min(imageW, imageW - sourceX)
         sourceH = imageH
 
         destX = 0
@@ -281,15 +281,13 @@ class Render:
         destW = math.floor(width * (sourceW / imageW))
         destH = height
 
-        # background = pygame.transform.scale(background, (imageW * 2, imageH))
-        background = pygame.transform.scale(background, (width * 2, height)).convert_alpha()
-        # background = pygame.transform.scale(background, (destW, destH))
-        # surface.blit(background, background_pos)
+
         surface.blit(background, (destX, destY), (sourceX, sourceY, sourceW, sourceH))
 
-        if (sourceW < imageW):
-            surface.blit(background, (layer['x'], sourceY), (imageW-sourceW, sourceH, destW-1, destH))
-            # surface.blit(background, (destW-1, destY), (layer['x'], sourceY, imageW-sourceW, sourceH))
+        destX2 = destX + sourceW
+
+        surface.blit(background, (destX2, destY))
+
 
     def player(surface, width, height, resolution, roadWidth, sprites, speed_percent, scale, destX, destY, steer, updown):
         """

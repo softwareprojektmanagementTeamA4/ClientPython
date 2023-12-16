@@ -133,7 +133,7 @@ class GameWindow:
             if keys[pygame.K_SPACE]:    # For testing purposes
                 speed *= 2
             if keys[pygame.K_w]:        # For testing purposes
-                pass
+                print (hill_offset)
 
             if ((playerX < -1) or (playerX > 1)):
 
@@ -241,7 +241,7 @@ class GameWindow:
             x = 0
             dx = - (base_segment['curve'] * base_percent)
 
-            self.surface.fill('#FFFFFF') # clear screen
+            self.surface.fill('#72D7EE') # clear screen
             
             Render.background(self.surface, self.background_sky,   window_width, window_height, Background.sky,   sky_offset,  resolution * sky_speed * playerY)  # Render background sky
             Render.background(self.surface, self.background_hills, window_width, window_height, Background.hills, hill_offset, resolution * hill_speed * playerY)
@@ -455,13 +455,13 @@ class GameWindow:
             add_low_rolling_hills(None, None)
             add_bumps()
             add_curve(road['length']['medium'], road['curve']['medium'], road['hill']['low'])
-            add_low_rolling_hills(None, None)
+            # add_low_rolling_hills(None, None)
             add_curve(road['length']['long'], road['curve']['medium'], road['hill']['medium'])
-            add_straight(None)
+            # add_straight(None)
             add_curve(road['length']['long'], -road['curve']['medium'], road['hill']['medium'])
-            add_hill(road['length']['long'], road['hill']['high'])
+            # add_hill(road['length']['long'], road['hill']['high'])
             add_curve(road['length']['long'],-road['curve']['medium'], road['hill']['low'])
-            add_hill(road['length']['long'], -road['hill']['medium'])
+            # add_hill(road['length']['long'], -road['hill']['medium'])
             add_straight(None)
             add_downhill_to_end(None)
 
