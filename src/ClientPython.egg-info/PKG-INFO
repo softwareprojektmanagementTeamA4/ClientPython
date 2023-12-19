@@ -6,3 +6,4 @@ Author: David Stevic
 Author-email: 
 Requires-Dist: pygame
 Requires-Dist: python-socketio[client]
+Requires-Dist: pygame-widgets
