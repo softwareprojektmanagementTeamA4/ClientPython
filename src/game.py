@@ -133,7 +133,7 @@ while run:
             username_input_box.enterpressed = False
             username = username_input_box.text
             try:
-                sio.connect('http://3.71.101.250:3000/', headers={'username': username})
+                sio.connect('http://3.67.84.6:3000/', headers={'username': username})
                 pygame.time.delay(1000)
             except Exception as ex:
                 print("Verbindungsfehler")

@@ -589,5 +589,5 @@ class GameWindow:
 
 
 
-#game = GameWindow()
-#game.run()
+game = GameWindow()
+game.run()
