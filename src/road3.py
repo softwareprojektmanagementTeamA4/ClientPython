@@ -135,6 +135,11 @@ class GameWindow:
             if keys[pygame.K_w]:        # For testing purposes
                 print (hill_offset)
 
+            # Esc key to quit
+            if keys[pygame.K_ESCAPE]:
+                pygame.quit()
+                sys.exit()
+
             if ((playerX < -1) or (playerX > 1)):
 
                 if (speed > off_road_limit):
@@ -586,5 +591,5 @@ class GameWindow:
 
 
 
-game = GameWindow()
-game.run()
+# game = GameWindow()
+# game.run()
