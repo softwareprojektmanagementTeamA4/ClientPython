@@ -1,6 +1,12 @@
 README.md
 setup.py
 src/game.py
+src/menue.py
+src/road.py
+src/road2.py
+src/road3.py
+src/sprites.py
+src/util.py
 src/ClientPython.egg-info/PKG-INFO
 src/ClientPython.egg-info/SOURCES.txt
 src/ClientPython.egg-info/dependency_links.txt
