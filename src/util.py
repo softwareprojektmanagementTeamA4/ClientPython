@@ -294,7 +294,16 @@ class Render:
         Draw player
         """
         bounce = (1.5 * random.random() * speed_percent * resolution) * Util.random_choice([-1, 1])
-        print(nitro)
+
+        direction = 'LEFT' if steer < 0 else 'RIGHT' if steer > 0 else 'STRAIGHT'
+        uphill = 'UPHILL_' if updown > 0 else ''
+
+        nitro_prefix = '_NITRO' if nitro else ''
+
+        sprite_key = f'PLAYER_{uphill}{direction}{nitro_prefix}'
+        sprite = sprites[sprite_key]
+
+        """
         if (steer < 0):
             if nitro:
                 sprite = sprites['PLAYER_UPHILL_LEFT_NITRO'] if updown > 0 else sprites['PLAYER_LEFT_NITRO']
@@ -309,7 +318,7 @@ class Render:
             if nitro:
                 sprite = sprites['PLAYER_UPHILL_STRAIGHT_NITRO'] if updown > 0 else sprites['PLAYER_STRAIGHT_NITRO']
             else:
-                sprite = sprites['PLAYER_UPHILL_STRAIGHT'] if updown > 0 else sprites['PLAYER_STRAIGHT']
+                sprite = sprites['PLAYER_UPHILL_STRAIGHT'] if updown > 0 else sprites['PLAYER_STRAIGHT']"""
 
         Render.sprite(surface, width, height, resolution, roadWidth, sprite, scale, destX, destY + bounce, -0.5, -1, 0)
 

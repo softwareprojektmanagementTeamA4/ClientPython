@@ -129,7 +129,6 @@ class GameWindow:
                 speed = Util.accelerate(speed, breaking, delta_time)
             else:                       # slow down if not pressing forward or backward
                 speed = Util.accelerate(speed, decel, delta_time)
-
             if keys[pygame.K_SPACE]:    # For testing purposes
                 speed = Util.accelerate(speed, accel * 2.5, delta_time) # 2,5x so schnell Beschleunigen
             if keys[pygame.K_w]:        # For testing purposes
