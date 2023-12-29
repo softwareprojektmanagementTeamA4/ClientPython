@@ -6,6 +6,7 @@ import sys
 import os
 from util import *
 from sprites import *
+import socketio
 
 
 src_path = os.path.dirname(__file__)
@@ -25,7 +26,9 @@ hill_offset = 0                    # current hill scroll offset
 tree_offset = 0                    # current tree scroll offset
 segments = []                      # array of road segments
 cars = []                          # array of cars on the road
-# background = None                  # our background image (loaded below)
+client_ids = {}                    # dict of other players
+player_cars = []                   # array of player cars
+# background = None                # our background image (loaded below)
 sprites = None                     # our spritesheet (loaded below)
 resolution = None                  # scaling factor for multi-resolution support
 road_width = 2000                  # actually half the roads width, easier math if the road spans from -roadWidth to +roadWidth
@@ -48,7 +51,7 @@ breaking = -max_speed              # deceleration rate when braking
 decel = -max_speed/5               # 'natural' deceleration rate when neither accelerating, nor braking
 off_road_decel = -max_speed/2      # off road deceleration is somewhere in between
 off_road_limit = max_speed/4       # limit when off road deceleration no longer applies (e.g. you can always go at least this speed even when off road)
-total_cars = 200                   # total number of cars on the road
+total_cars = 50                   # total number of cars on the road
 current_lap_time = 0               # current lap time
 last_lap_time = None               # last lap time
 path_background_sky = "background/sky.png"
@@ -90,10 +93,17 @@ class GameWindow:
         self.background = pygame.Surface((window_width, window_height))
 
 
-    def run(self):
+    def run(self, sio, offlinemode, id, client_ids_server, is_host):
         """
         Main game loop
         """
+        global client_ids
+
+        client_ids = client_ids_server
+        self.sio = sio
+        self.offlinemode = offlinemode
+        self.id = id
+        self.is_host = is_host
 
         def update(delta_time):
             """
@@ -106,7 +116,8 @@ class GameWindow:
             dx = delta_time * 2 * speed_percent # at top speed, should be able to cross from left to right (-1 to 1) in 1 second
             start_position = position
 
-            update_cars(delta_time, player_segment, playerW)
+            if is_host:
+                update_cars(delta_time, player_segment, playerW)
 
             position = Util.increase(position, delta_time * speed, track_length)
             
@@ -167,6 +178,41 @@ class GameWindow:
 
             playerX = Util.limit(playerX, -2, 2) # dont ever let player go too far out of bounds
             speed = Util.limit(speed, 0, max_speed) # or exceed maxSpeed
+            if not offlinemode:
+                send_data()
+                global client_ids
+
+
+        """
+        SockeIO Eventhandler
+
+        @sio.receive_data: receive data from server
+        """
+        @sio.event()
+        def receive_data(data):
+            """
+            Receive data from server
+            """
+            pass
+            
+        @sio.event()
+        def receive_npc_car_data(data):
+            """
+            Receive data from server
+            """
+            if is_host: return
+            global cars
+            cars = data
+            put_cars_into_segments()
+
+        def send_data():
+            """
+            Send data to server
+            """
+            sio.emit('player_data', {'playerX': playerX, 'playerZ': position})
+            if is_host:
+                sio.emit('npc_car_data', cars)
+                
 
         def update_cars(delta_time, player_segment, player_w):
             for n in range(len(cars)):
@@ -180,6 +226,14 @@ class GameWindow:
                     index = Util.index_of(old_segment['cars'], car)
                     old_segment['cars'].pop(index)
                     new_segment['cars'].append(car)
+
+        # def update_player_cars(delta_time, player_segment, player_w):
+        #     for n in range(client_ids):
+
+
+
+                # car = {'id':  {'offset': offset, 'z': z, 'sprite': sprite, 'speed': speed}
+                
 
         def update_car_offset(car, car_segment, player_segment, player_w):
             lookahead = 20
@@ -321,9 +375,6 @@ class GameWindow:
                                 steer,
                                 player_segment['p2']['world']['y'] - player_segment['p1']['world']['y'])
 
-
-
-            
         def frame():
             """
             Main game frame
@@ -470,8 +521,6 @@ class GameWindow:
             add_straight(None)
             add_downhill_to_end(None)
 
-            reset_sprites()
-            reset_cars()
 
             segments[find_segment(playerZ)['index'] + 2]['color'] = Colors.start
             segments[find_segment(playerZ)['index'] + 3]['color'] = Colors.start
@@ -543,9 +592,31 @@ class GameWindow:
                 sprite = Util.random_choice_dict(sprite_list_cars)
                 speed = max_speed/4 + random.random() * max_speed/(4 if sprite == sprite_list_cars['SEMI'] else 2)
                 car = {'offset': offset, 'z': z, 'sprite': sprite, 'speed': speed}
+                cars.append(car)
+                
+            put_cars_into_segments()
+
+        def put_cars_into_segments():
+            for n in range(len(segments)):
+                segments[n]['cars'] = []
+
+            for n in range(len(cars)):
+                car = cars[n]
                 segment = find_segment(car['z'])
                 segment['cars'].append(car)
-                cars.append(car)
+
+        @sio.event()
+        def reset_player_cars():
+            global player_cars
+            player_cars = []
+            offset = 0
+
+            for player in client_ids:
+                player_cars.append({'id': player, 'offset': offset, 'z': 0, 'sprite': sprite_list['PLAYER_STRAIGHT'], 'speed': 0})
+                offset += 0.66
+
+            return player_cars
+            
 
         def reset():
 
@@ -560,7 +631,11 @@ class GameWindow:
           
             if (len(segments) == 0):
                 reset_road()
+                reset_sprites()
 
+                if is_host:
+                    reset_cars()
+                    sio.emit('npc_car_data', cars)
 
         def find_segment(z):
             """
