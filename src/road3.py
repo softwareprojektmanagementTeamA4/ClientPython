@@ -104,6 +104,7 @@ class GameWindow:
         self.offlinemode = offlinemode
         self.id = id
         self.is_host = is_host
+        self.game_is_loaded = False
 
         def update(delta_time):
             """
@@ -200,7 +201,7 @@ class GameWindow:
             """
             Receive data from server
             """
-            if is_host: return
+            if is_host or not self.game_is_loaded: return
             global cars
             cars = data
             put_cars_into_segments()
@@ -583,6 +584,18 @@ class GameWindow:
             #     print (n, segments[n]['sprites'])
             #     time.sleep(0.2)
         
+        @sio.event()
+        def reset_player_cars():
+            global player_cars
+            player_cars = []
+            offset = 0
+
+            for player in client_ids:
+                player_cars.append({'id': player, 'offset': offset, 'z': 0, 'sprite': sprite_list['PLAYER_STRAIGHT'], 'speed': 0})
+                offset += 0.66
+
+            return player_cars
+        
         def reset_cars():
             global cars
             cars = []
@@ -605,17 +618,6 @@ class GameWindow:
                 segment = find_segment(car['z'])
                 segment['cars'].append(car)
 
-        @sio.event()
-        def reset_player_cars():
-            global player_cars
-            player_cars = []
-            offset = 0
-
-            for player in client_ids:
-                player_cars.append({'id': player, 'offset': offset, 'z': 0, 'sprite': sprite_list['PLAYER_STRAIGHT'], 'speed': 0})
-                offset += 0.66
-
-            return player_cars
             
 
         def reset():
@@ -649,6 +651,7 @@ class GameWindow:
         # Game.
         sprites = Game.load_images()
         reset()
+        self.game_is_loaded = True
         # main game loop
         while 1:
             self.clock.tick(fps)
