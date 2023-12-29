@@ -131,7 +131,7 @@ class GameWindow:
                 speed = Util.accelerate(speed, decel, delta_time)
 
             if keys[pygame.K_SPACE]:    # For testing purposes
-                speed *= 2
+                speed = Util.accelerate(speed, accel * 2.5, delta_time) # 2,5x so schnell Beschleunigen
             if keys[pygame.K_w]:        # For testing purposes
                 print (hill_offset)
 
@@ -319,7 +319,7 @@ class GameWindow:
                                 window_width/2,
                                 (window_height/2) - (camera_depth/playerZ * Util.interpolate(player_segment['p1']['camera']['y'], player_segment['p2']['camera']['y'], player_percent) * window_height/2),
                                 steer,
-                                player_segment['p2']['world']['y'] - player_segment['p1']['world']['y'])
+                                player_segment['p2']['world']['y'] - player_segment['p1']['world']['y'], keys[pygame.K_SPACE])
 
 
 
@@ -591,5 +591,5 @@ class GameWindow:
 
 
 
-# game = GameWindow()
-# game.run()
+game = GameWindow()
+game.run()

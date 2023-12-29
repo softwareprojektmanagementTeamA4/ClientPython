@@ -34,7 +34,13 @@ sprite_list = {
     'PLAYER_UPHILL_RIGHT':    { 'x': 1385, 'y': 1018, 'w':   80, 'h':   45 },
     'PLAYER_LEFT':            { 'x':  995, 'y':  480, 'w':   80, 'h':   41 },
     'PLAYER_STRAIGHT':        { 'x': 1085, 'y':  480, 'w':   80, 'h':   41 },
-    'PLAYER_RIGHT':           { 'x':  995, 'y':  531, 'w':   80, 'h':   41 }
+    'PLAYER_RIGHT':           { 'x':  995, 'y':  531, 'w':   80, 'h':   41 },
+    'PLAYER_UPHILL_LEFT_NITRO':     { 'x':  1383, 'y':  1133, 'w':   80, 'h':   46 },
+    'PLAYER_UPHILL_STRAIGHT_NITRO': { 'x':  1295, 'y':  1074, 'w':   80, 'h':   46 },
+    'PLAYER_UPHILL_RIGHT_NITRO':    { 'x':  1385, 'y':  1074, 'w':   80, 'h':   46 },
+    'PLAYER_LEFT_NITRO':            { 'x':  995, 'y':  625, 'w':   80, 'h':   41 },
+    'PLAYER_STRAIGHT_NITRO':        { 'x':  1085, 'y':  578, 'w':   80, 'h':   41 },
+    'PLAYER_RIGHT_NITRO':           { 'x':  995, 'y':  577, 'w':   80, 'h':   41 }
 }
 
 sprite_list_plants = {

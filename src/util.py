@@ -27,7 +27,7 @@ class Game:
         Load images
         """
         images = {}
-        sprite_sheet = pygame.image.load("media/sprites.png").convert_alpha()
+        sprite_sheet = pygame.image.load("media/sprites_neu.png").convert_alpha()
         for name, sprite in sprite_list.items():
             images[name] = sprite_sheet.subsurface(pygame.Rect(sprite['x'], sprite['y'], sprite['w'], sprite['h'])).convert_alpha()
 
@@ -289,17 +289,27 @@ class Render:
         surface.blit(background, (destX2, destY))
 
 
-    def player(surface, width, height, resolution, roadWidth, sprites, speed_percent, scale, destX, destY, steer, updown):
+    def player(surface, width, height, resolution, roadWidth, sprites, speed_percent, scale, destX, destY, steer, updown, nitro):
         """
         Draw player
         """
         bounce = (1.5 * random.random() * speed_percent * resolution) * Util.random_choice([-1, 1])
+        print(nitro)
         if (steer < 0):
-            sprite = sprites['PLAYER_UPHILL_LEFT'] if updown > 0 else sprites['PLAYER_LEFT']
+            if nitro:
+                sprite = sprites['PLAYER_UPHILL_LEFT_NITRO'] if updown > 0 else sprites['PLAYER_LEFT_NITRO']
+            else:
+                sprite = sprites['PLAYER_UPHILL_LEFT'] if updown > 0 else sprites['PLAYER_LEFT']
         elif (steer > 0):
-            sprite = sprites['PLAYER_UPHILL_RIGHT'] if updown > 0 else sprites['PLAYER_RIGHT']
+            if nitro:
+                sprite = sprites['PLAYER_UPHILL_RIGHT_NITRO'] if updown > 0 else sprites['PLAYER_RIGHT_NITRO']
+            else:
+                sprite = sprites['PLAYER_UPHILL_RIGHT'] if updown > 0 else sprites['PLAYER_RIGHT']
         else:
-            sprite = sprites['PLAYER_UPHILL_STRAIGHT'] if updown > 0 else sprites['PLAYER_STRAIGHT']
+            if nitro:
+                sprite = sprites['PLAYER_UPHILL_STRAIGHT_NITRO'] if updown > 0 else sprites['PLAYER_STRAIGHT_NITRO']
+            else:
+                sprite = sprites['PLAYER_UPHILL_STRAIGHT'] if updown > 0 else sprites['PLAYER_STRAIGHT']
 
         Render.sprite(surface, width, height, resolution, roadWidth, sprite, scale, destX, destY + bounce, -0.5, -1, 0)
 
