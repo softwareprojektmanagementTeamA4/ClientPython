@@ -7,7 +7,7 @@ import os
 from util import *
 from sprites import *
 import socketio
-
+from threading import Lock
 
 src_path = os.path.dirname(__file__)
 
@@ -26,8 +26,10 @@ hill_offset = 0                    # current hill scroll offset
 tree_offset = 0                    # current tree scroll offset
 segments = []                      # array of road segments
 cars = []                          # array of cars on the road
+npc_car_lock = Lock()              # lock for adding cars to segments
 client_ids = {}                    # dict of other players
 player_start_positions = []        # array of player cars
+play_car_lock = Lock()             # lock for adding cars to segments
 player_cars = {}                   # array of player cars
 player_num = 1                     # player number
 # background = None                # our background image (loaded below)
@@ -358,14 +360,17 @@ class GameWindow:
             for n in range((draw_distance-1), 2, -1):
                 segment = segments[(base_segment['index'] + n) % len(segments)]
 
-                for i in range(len(segment['cars'])):
-                    car          = segment['cars'][i]
-                    sprite       = sprites[car['sprite'][0]]
-                    sprite_scale = Util.interpolate(segment['p1']['screen']['scale'], segment['p2']['screen']['scale'], car['percent'])
-                    spriteX      = Util.interpolate(segment['p1']['screen']['x'],     segment['p2']['screen']['x'],     car['percent']) + (sprite_scale * car['offset'] * road_width * window_width/2)
-                    spriteY      = Util.interpolate(segment['p1']['screen']['y'],     segment['p2']['screen']['y'],     car['percent'])
-                    Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, -0.5, -1, segment['clip']) 
-
+                while True:
+                    npc_car_lock.acquire()
+                    for i in range(len(segment['cars'])):
+                        car          = segment['cars'][i]
+                        sprite       = sprites[car['sprite'][0]]
+                        sprite_scale = Util.interpolate(segment['p1']['screen']['scale'], segment['p2']['screen']['scale'], car['percent'])
+                        spriteX      = Util.interpolate(segment['p1']['screen']['x'],     segment['p2']['screen']['x'],     car['percent']) + (sprite_scale * car['offset'] * road_width * window_width/2)
+                        spriteY      = Util.interpolate(segment['p1']['screen']['y'],     segment['p2']['screen']['y'],     car['percent'])
+                        Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, -0.5, -1, segment['clip']) 
+                    npc_car_lock.release()
+                    break
                 for i in range(len(segment['sprites'])):
                     sprite       = sprites[(segment['sprites'][i]['source'][0])]
                     sprite_scale = segment['p1']['screen']['scale']
@@ -662,13 +667,17 @@ class GameWindow:
             put_cars_into_segments()
 
         def put_cars_into_segments():
-            for n in range(len(segments)):
-                segments[n]['cars'] = []
+            while True:
+                npc_car_lock.acquire()
+                for n in range(len(segments)):
+                    segments[n]['cars'] = []
 
-            for n in range(len(cars)):
-                car = cars[n]
-                segment = find_segment(car['z'])
-                segment['cars'].append(car)
+                for n in range(len(cars)):
+                    car = cars[n]
+                    segment = find_segment(car['z'])
+                    segment['cars'].append(car)
+                npc_car_lock.release()
+                break
 
             
 
