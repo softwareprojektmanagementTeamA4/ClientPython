@@ -145,7 +145,8 @@ class GameWindow:
             if keys[pygame.K_SPACE]:    # For testing purposes
                 speed *= 2
             if keys[pygame.K_w]:        # For testing purposes
-                print (hill_offset)
+                for car in player_cars:
+                    print(car['id'], car['offset'], car['z'], car['sprite'], car['speed'])
 
             # Esc key to quit
             if keys[pygame.K_ESCAPE]:
@@ -584,17 +585,32 @@ class GameWindow:
             #     print (n, segments[n]['sprites'])
             #     time.sleep(0.2)
         
-        @sio.event()
         def reset_player_cars():
             global player_cars
             player_cars = []
-            offset = 0
+            offset = -0.8
 
             for player in client_ids:
                 player_cars.append({'id': player, 'offset': offset, 'z': 0, 'sprite': sprite_list['PLAYER_STRAIGHT'], 'speed': 0})
                 offset += 0.66
 
+            sio.emit('player_cars_data', player_cars)
+
             return player_cars
+        
+        @sio.event()
+        def receive_start_position(data):
+            """
+            Receive starposition
+            """
+            if is_host: return
+            global player_cars
+            for player in data:
+                if player['id'] == id:
+                    playerX = player['offset']
+                    position = player['z']
+                    break
+            player_cars = data
         
         def reset_cars():
             global cars
@@ -637,7 +653,9 @@ class GameWindow:
 
                 if is_host:
                     reset_cars()
-                    sio.emit('npc_car_data', cars)
+                    reset_player_cars()
+                    if not offlinemode:
+                        sio.emit('npc_car_data', cars)
 
         def find_segment(z):
             """

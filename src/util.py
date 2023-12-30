@@ -295,11 +295,11 @@ class Render:
         """
         bounce = (1.5 * random.random() * speed_percent * resolution) * Util.random_choice([-1, 1])
         if (steer < 0):
-            sprite = sprites['PLAYER_UPHILL_LEFT'] if updown > 0 else sprites['PLAYER_LEFT']
+            sprite = sprites['PLAYER_3_UPHILL_LEFT'] if updown > 0 else sprites['PLAYER_3_LEFT']
         elif (steer > 0):
-            sprite = sprites['PLAYER_UPHILL_RIGHT'] if updown > 0 else sprites['PLAYER_RIGHT']
+            sprite = sprites['PLAYER_3_UPHILL_RIGHT'] if updown > 0 else sprites['PLAYER_3_RIGHT']
         else:
-            sprite = sprites['PLAYER_UPHILL_STRAIGHT'] if updown > 0 else sprites['PLAYER_STRAIGHT']
+            sprite = sprites['PLAYER_3_UPHILL_STRAIGHT'] if updown > 0 else sprites['PLAYER_3_STRAIGHT']
 
         Render.sprite(surface, width, height, resolution, roadWidth, sprite, scale, destX, destY + bounce, -0.5, -1, 0)
 
