@@ -27,7 +27,8 @@ tree_offset = 0                    # current tree scroll offset
 segments = []                      # array of road segments
 cars = []                          # array of cars on the road
 client_ids = {}                    # dict of other players
-player_cars = []                   # array of player cars
+player_start_positions = []        # array of player cars
+player_cars = {}                   # array of player cars
 player_num = 1                     # player number
 # background = None                # our background image (loaded below)
 sprites = None                     # our spritesheet (loaded below)
@@ -146,8 +147,7 @@ class GameWindow:
             if keys[pygame.K_SPACE]:    # For testing purposes
                 speed *= 2
             if keys[pygame.K_w]:        # For testing purposes
-                for car in player_cars:
-                    print(car['id'], car['offset'], car['z'], car['player_num'], car['speed'])
+                pass
 
             # Esc key to quit
             if keys[pygame.K_ESCAPE]:
@@ -196,7 +196,9 @@ class GameWindow:
             """
             Receive data from server
             """
-            pass
+            global player_cars
+            player_cars.update(data)
+
             
         @sio.event()
         def receive_npc_car_data(data):
@@ -212,7 +214,7 @@ class GameWindow:
             """
             Send data to server
             """
-            sio.emit('player_data', {'playerX': playerX, 'playerZ': position})
+            sio.emit('player_data', {'playerX': playerX, 'position': position, 'player_num': player_num})
             if is_host:
                 sio.emit('npc_car_data', cars)
                 
@@ -230,7 +232,7 @@ class GameWindow:
                     old_segment['cars'].pop(index)
                     new_segment['cars'].append(car)
 
-        # def update_player_cars(delta_time, player_segment, player_w):
+        # def update_player_start_positions(delta_time, player_segment, player_w):
         #     for n in range(client_ids):
 
 
@@ -360,6 +362,25 @@ class GameWindow:
                     offsetX      = -1 if (segment['sprites'][i]['offset'] < 0) else 0
                     Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, offsetX, -1, segment['clip'])
 
+##########################################################################
+                # Render other players (if multiplayer)
+                if not offlinemode:
+                    for player in player_cars:
+                        if player == id: continue
+                        other_player_segment = find_segment(player_cars[player]['position'] + playerZ)
+                        if (segment == other_player_segment):
+                            other_player_num = player_cars[player]['player_num']
+                            car_percent = Util.percent_remaining(player_cars[player]['position'] + playerZ, segment_length)
+                            sprite = sprites[f'PLAYER_{other_player_num}_STRAIGHT']
+                            sprite_scale = Util.interpolate(segment['p1']['screen']['scale'], segment['p2']['screen']['scale'], car_percent)
+                            spriteX = Util.interpolate(segment['p1']['screen']['x'], segment['p2']['screen']['x'], car_percent) + (sprite_scale * player_cars[player]['playerX'] * road_width * window_width/2)
+                            spriteY = Util.interpolate(segment['p1']['screen']['y'], segment['p2']['screen']['y'], car_percent)
+                            Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, -0.5, -1, segment['clip'])
+
+##########################################################################
+
+
+                  
                 # render player
                 if (segment == player_segment):
                     # calc steering
@@ -588,27 +609,27 @@ class GameWindow:
             #     time.sleep(0.2)
         
         # rest start position
-        def reset_player_cars():
-            global player_cars
-            player_cars = []
+        def reset_player_start_positions():
+            global player_start_positions
+            player_start_positions = []
             offset = -0.6
             player_num = 1
 
             for player in client_ids:
-                player_cars.append({'id': player, 'offset': offset, 'z': 0, 'player_num': player_num, 'speed': 0})
+                player_start_positions.append({'id': player, 'offset': offset, 'z': 0, 'player_num': player_num, 'speed': 0})
                 offset += 0.66
                 player_num += 1
 
-            sio.emit('player_cars_data', player_cars)
+            sio.emit('player_start_positions_data', player_start_positions)
 
-            return player_cars
+            return player_start_positions
         
         @sio.event()
         def receive_start_position(data):
             """
             Receive starposition
             """
-            global player_cars
+            global player_start_positions
             global playerX
             global position
             global player_num
@@ -618,7 +639,7 @@ class GameWindow:
                     position = player['z']
                     player_num = player['player_num']
                     break
-            player_cars = data
+            player_start_positions = data
         
         def reset_cars():
             global cars
@@ -661,8 +682,8 @@ class GameWindow:
 
                 if is_host:
                     reset_cars()
-                    reset_player_cars()
                     if not offlinemode:
+                        reset_player_start_positions()
                         sio.emit('npc_car_data', cars)
                 else:
                     if not offlinemode:
