@@ -28,6 +28,7 @@ segments = []                      # array of road segments
 cars = []                          # array of cars on the road
 client_ids = {}                    # dict of other players
 player_cars = []                   # array of player cars
+player_num = 1                     # player number
 # background = None                # our background image (loaded below)
 sprites = None                     # our spritesheet (loaded below)
 resolution = None                  # scaling factor for multi-resolution support
@@ -112,7 +113,7 @@ class GameWindow:
             """
             global position, speed, playerX, playerZ, sky_offset, hill_offset, tree_offset
             player_segment = find_segment(position + playerZ)
-            playerW = sprite_list['PLAYER_STRAIGHT']['w'] * SPRITE_SCALE
+            playerW = sprite_list['PLAYER_1_STRAIGHT']['w'] * SPRITE_SCALE
             speed_percent = speed/max_speed
             dx = delta_time * 2 * speed_percent # at top speed, should be able to cross from left to right (-1 to 1) in 1 second
             start_position = position
@@ -146,7 +147,7 @@ class GameWindow:
                 speed *= 2
             if keys[pygame.K_w]:        # For testing purposes
                 for car in player_cars:
-                    print(car['id'], car['offset'], car['z'], car['sprite'], car['speed'])
+                    print(car['id'], car['offset'], car['z'], car['player_num'], car['speed'])
 
             # Esc key to quit
             if keys[pygame.K_ESCAPE]:
@@ -375,7 +376,8 @@ class GameWindow:
                                 window_width/2,
                                 (window_height/2) - (camera_depth/playerZ * Util.interpolate(player_segment['p1']['camera']['y'], player_segment['p2']['camera']['y'], player_percent) * window_height/2),
                                 steer,
-                                player_segment['p2']['world']['y'] - player_segment['p1']['world']['y'])
+                                player_segment['p2']['world']['y'] - player_segment['p1']['world']['y'],
+                                player_num)
 
         def frame():
             """
@@ -589,11 +591,13 @@ class GameWindow:
         def reset_player_cars():
             global player_cars
             player_cars = []
-            offset = -0.8
+            offset = -0.6
+            player_num = 1
 
             for player in client_ids:
-                player_cars.append({'id': player, 'offset': offset, 'z': 0, 'sprite': sprite_list['PLAYER_STRAIGHT'], 'speed': 0})
+                player_cars.append({'id': player, 'offset': offset, 'z': 0, 'player_num': player_num, 'speed': 0})
                 offset += 0.66
+                player_num += 1
 
             sio.emit('player_cars_data', player_cars)
 
@@ -607,10 +611,12 @@ class GameWindow:
             global player_cars
             global playerX
             global position
+            global player_num
             for player in data:
                 if player['id'] == id:
                     playerX = player['offset']
                     position = player['z']
+                    player_num = player['player_num']
                     break
             player_cars = data
         

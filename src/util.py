@@ -5,7 +5,7 @@ import pygame
 import math
 from sprites import sprite_list
 
-SPRITE_SCALE = 0.3 * (1/sprite_list['PLAYER_STRAIGHT']['w'])
+SPRITE_SCALE = 0.3 * (1/sprite_list['PLAYER_1_STRAIGHT']['w'])
 
 class Colors:
     sky = pygame.Color("#72D7EE")
@@ -289,17 +289,18 @@ class Render:
         surface.blit(background, (destX2, destY))
 
 
-    def player(surface, width, height, resolution, roadWidth, sprites, speed_percent, scale, destX, destY, steer, updown):
+    def player(surface, width, height, resolution, roadWidth, sprites, speed_percent, scale, destX, destY, steer, updown, player_num):
         """
         Draw player
         """
+        # player number 1 = red car, 2 = green car, 3 = yellow car
         bounce = (1.5 * random.random() * speed_percent * resolution) * Util.random_choice([-1, 1])
         if (steer < 0):
-            sprite = sprites['PLAYER_3_UPHILL_LEFT'] if updown > 0 else sprites['PLAYER_3_LEFT']
+            sprite = sprites[f'PLAYER_{player_num}_UPHILL_LEFT'] if updown > 0 else sprites[f'PLAYER_{player_num}_LEFT']
         elif (steer > 0):
-            sprite = sprites['PLAYER_3_UPHILL_RIGHT'] if updown > 0 else sprites['PLAYER_3_RIGHT']
+            sprite = sprites[f'PLAYER_{player_num}_UPHILL_RIGHT'] if updown > 0 else sprites[f'PLAYER_{player_num}_RIGHT']
         else:
-            sprite = sprites['PLAYER_3_UPHILL_STRAIGHT'] if updown > 0 else sprites['PLAYER_3_STRAIGHT']
+            sprite = sprites[f'PLAYER_{player_num}_UPHILL_STRAIGHT'] if updown > 0 else sprites[f'PLAYER_{player_num}_STRAIGHT']
 
         Render.sprite(surface, width, height, resolution, roadWidth, sprite, scale, destX, destY + bounce, -0.5, -1, 0)
 
