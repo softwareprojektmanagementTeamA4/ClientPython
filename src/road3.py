@@ -176,7 +176,16 @@ class GameWindow:
                         speed = car['speed'] * (car['speed']/speed)
                         position = Util.increase(car['z'], -playerZ, track_length)
                         break
-
+                    
+            for n in player_cars:
+                if n == id: continue
+                car_segment = find_segment(player_cars[n]['position'] + playerZ)
+                carW = sprite_list['PLAYER_1_STRAIGHT']['w'] * SPRITE_SCALE
+                if (speed > player_cars[n]['speed']):
+                    if (Util.overlap(playerX, playerW, player_cars[n]['playerX'], carW, 0.8)):
+                        speed = player_cars[n]['speed'] * (player_cars[n]['speed']/speed)
+                        position = Util.increase(player_cars[n]['position'], -playerZ, track_length)
+                        break
 
 
             playerX = Util.limit(playerX, -2, 2) # dont ever let player go too far out of bounds
@@ -214,7 +223,7 @@ class GameWindow:
             """
             Send data to server
             """
-            sio.emit('player_data', {'playerX': playerX, 'position': position, 'player_num': player_num})
+            sio.emit('player_data', {'playerX': playerX, 'position': position, 'player_num': player_num, 'speed': speed})
             if is_host:
                 sio.emit('npc_car_data', cars)
                 
@@ -362,7 +371,6 @@ class GameWindow:
                     offsetX      = -1 if (segment['sprites'][i]['offset'] < 0) else 0
                     Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, offsetX, -1, segment['clip'])
 
-##########################################################################
                 # Render other players (if multiplayer)
                 if not offlinemode:
                     for player in player_cars:
@@ -377,10 +385,6 @@ class GameWindow:
                             spriteY = Util.interpolate(segment['p1']['screen']['y'], segment['p2']['screen']['y'], car_percent)
                             Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, -0.5, -1, segment['clip'])
 
-##########################################################################
-
-
-                  
                 # render player
                 if (segment == player_segment):
                     # calc steering
