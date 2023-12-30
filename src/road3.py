@@ -176,10 +176,13 @@ class GameWindow:
                         speed = car['speed'] * (car['speed']/speed)
                         position = Util.increase(car['z'], -playerZ, track_length)
                         break
-                    
+
+            # Collide with other players     
             for n in player_cars:
                 if n == id: continue
                 car_segment = find_segment(player_cars[n]['position'] + playerZ)
+                if car_segment != player_segment:
+                    continue
                 carW = sprite_list['PLAYER_1_STRAIGHT']['w'] * SPRITE_SCALE
                 if (speed > player_cars[n]['speed']):
                     if (Util.overlap(playerX, playerW, player_cars[n]['playerX'], carW, 0.8)):
