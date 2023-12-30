@@ -585,6 +585,7 @@ class GameWindow:
             #     print (n, segments[n]['sprites'])
             #     time.sleep(0.2)
         
+        # rest start position
         def reset_player_cars():
             global player_cars
             player_cars = []
@@ -657,6 +658,9 @@ class GameWindow:
                     reset_player_cars()
                     if not offlinemode:
                         sio.emit('npc_car_data', cars)
+                else 
+                    if not offlinemode:
+                        sio.emit('request_start_position')
 
         def find_segment(z):
             """
