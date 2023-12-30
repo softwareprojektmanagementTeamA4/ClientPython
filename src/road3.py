@@ -658,7 +658,7 @@ class GameWindow:
                     reset_player_cars()
                     if not offlinemode:
                         sio.emit('npc_car_data', cars)
-                else 
+                else:
                     if not offlinemode:
                         sio.emit('request_start_position')
 
