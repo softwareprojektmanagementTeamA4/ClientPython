@@ -603,8 +603,9 @@ class GameWindow:
             """
             Receive starposition
             """
-            if is_host: return
             global player_cars
+            global playerX
+            global position
             for player in data:
                 if player['id'] == id:
                     playerX = player['offset']
