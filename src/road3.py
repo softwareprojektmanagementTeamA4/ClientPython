@@ -29,7 +29,7 @@ cars = []                          # array of cars on the road
 npc_car_lock = Lock()              # lock for adding cars to segments
 client_ids = {}                    # dict of other players
 player_start_positions = []        # array of player cars
-play_car_lock = Lock()             # lock for adding cars to segments
+player_car_lock = Lock()           # lock for adding cars to segments
 player_cars = {}                   # array of player cars
 player_num = 1                     # player number
 # background = None                # our background image (loaded below)
@@ -211,7 +211,12 @@ class GameWindow:
             Receive data from server
             """
             global player_cars
-            player_cars.update(data)
+            while True:
+                player_car_lock.acquire()
+                player_cars.update(data)
+                player_car_lock.release()
+                break
+
 
             
         @sio.event()
@@ -381,17 +386,21 @@ class GameWindow:
 
                 # Render other players (if multiplayer)
                 if not offlinemode:
-                    for player in player_cars:
-                        if player == id: continue
-                        other_player_segment = find_segment(player_cars[player]['position'] + playerZ)
-                        if (segment == other_player_segment):
-                            other_player_num = player_cars[player]['player_num']
-                            car_percent = Util.percent_remaining(player_cars[player]['position'] + playerZ, segment_length)
-                            sprite = sprites[f'PLAYER_{other_player_num}_STRAIGHT']
-                            sprite_scale = Util.interpolate(segment['p1']['screen']['scale'], segment['p2']['screen']['scale'], car_percent)
-                            spriteX = Util.interpolate(segment['p1']['screen']['x'], segment['p2']['screen']['x'], car_percent) + (sprite_scale * player_cars[player]['playerX'] * road_width * window_width/2)
-                            spriteY = Util.interpolate(segment['p1']['screen']['y'], segment['p2']['screen']['y'], car_percent)
-                            Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, -0.5, -1, segment['clip'])
+                    while True:
+                        player_car_lock.acquire()
+                        for player in player_cars:
+                            if player == id: continue
+                            other_player_segment = find_segment(player_cars[player]['position'] + playerZ)
+                            if (segment == other_player_segment):
+                                other_player_num = player_cars[player]['player_num']
+                                car_percent = Util.percent_remaining(player_cars[player]['position'] + playerZ, segment_length)
+                                sprite = sprites[f'PLAYER_{other_player_num}_STRAIGHT']
+                                sprite_scale = Util.interpolate(segment['p1']['screen']['scale'], segment['p2']['screen']['scale'], car_percent)
+                                spriteX = Util.interpolate(segment['p1']['screen']['x'], segment['p2']['screen']['x'], car_percent) + (sprite_scale * player_cars[player]['playerX'] * road_width * window_width/2)
+                                spriteY = Util.interpolate(segment['p1']['screen']['y'], segment['p2']['screen']['y'], car_percent)
+                                Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, -0.5, -1, segment['clip'])
+                        player_car_lock.release()
+                        break
 
                 # render player
                 if (segment == player_segment):

@@ -44,9 +44,9 @@ sprite_list = {
     'PLAYER_2_STRAIGHT':      { 'x': 1652, 'y':  0,   'w':   80, 'h':   41 },
     'PLAYER_2_RIGHT':         { 'x': 1572, 'y':  0,   'w':   80, 'h':   41 },
     # Player 3 (Yellow Car)
-    'PLAYER_3_UPHILL_LEFT':   { 'x': 2132, 'y':  0,   'w':   80, 'h':   45 },
-    'PLAYER_3_UPHILL_STRAIGHT': { 'x': 2292, 'y': 0,  'w':   80, 'h':   45 },
-    'PLAYER_3_UPHILL_RIGHT':  { 'x': 2212, 'y': 0,    'w':   80, 'h':   45 },
+    'PLAYER_3_UPHILL_LEFT':   { 'x': 2212, 'y':  0,   'w':   80, 'h':   45 },
+    'PLAYER_3_UPHILL_STRAIGHT': { 'x': 2372, 'y': 0,  'w':   80, 'h':   45 },
+    'PLAYER_3_UPHILL_RIGHT':  { 'x': 2292, 'y': 0,    'w':   80, 'h':   45 },
     'PLAYER_3_LEFT':          { 'x': 1972, 'y':  0,   'w':   80, 'h':   41 },
     'PLAYER_3_STRAIGHT':      { 'x': 2132, 'y':  0,   'w':   80, 'h':   41 },
     'PLAYER_3_RIGHT':         { 'x': 2052, 'y':  0,   'w':   80, 'h':   41 },
