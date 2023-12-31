@@ -54,7 +54,10 @@ last_lap_time = None               # last lap time
 path_background_sky = "background/sky.png"
 path_background_hills = "background/hills.png"
 path_background_trees = "background/trees.png"
-
+max_nitro = 100
+nitro = 100
+nitro_recharging = False
+nitro_is_on = False
 
 #########################################################
 road_length = 500                 # length of our road
@@ -99,9 +102,9 @@ class GameWindow:
             """
             Update current game state
             """
-            global position, speed, playerX, playerZ, sky_offset, hill_offset, tree_offset
+            global position, speed, playerX, playerZ, sky_offset, hill_offset, tree_offset, max_nitro, nitro, nitro_recharging, nitro_is_on
             player_segment = find_segment(position + playerZ)
-            playerW = sprite_list['PLAYER_STRAIGHT']['w'] * SPRITE_SCALE
+            playerW = sprite_list['1_PLAYER_STRAIGHT']['w'] * SPRITE_SCALE #1_
             speed_percent = speed/max_speed
             dx = delta_time * 2 * speed_percent # at top speed, should be able to cross from left to right (-1 to 1) in 1 second
             start_position = position
@@ -129,11 +132,22 @@ class GameWindow:
                 speed = Util.accelerate(speed, breaking, delta_time)
             else:                       # slow down if not pressing forward or backward
                 speed = Util.accelerate(speed, decel, delta_time)
-            if keys[pygame.K_SPACE]:    # For testing purposes
-                speed = Util.accelerate(speed, accel * 2.5, delta_time) # 2,5x so schnell Beschleunigen
-            if keys[pygame.K_w]:        # For testing purposes
-                print (hill_offset)
 
+            if keys[pygame.K_SPACE]:
+                if nitro <= 0:
+                    nitro_recharging = True
+                elif not nitro_recharging and speed > 0:
+                    nitro_is_on = True
+                    speed = Util.accelerate(speed, accel * 2.5, delta_time)  # 2,5x so schnell Beschleunigen
+                    nitro -= 1
+            else:
+                nitro_is_on = False
+            if nitro_recharging:
+                nitro_is_on = False
+                nitro += 0.0625 #c.a 26 Sek. Recharge
+                if nitro >= max_nitro:
+                    nitro = max_nitro
+                    nitro_recharging = False
             # Esc key to quit
             if keys[pygame.K_ESCAPE]:
                 pygame.quit()
@@ -318,7 +332,7 @@ class GameWindow:
                                 window_width/2,
                                 (window_height/2) - (camera_depth/playerZ * Util.interpolate(player_segment['p1']['camera']['y'], player_segment['p2']['camera']['y'], player_percent) * window_height/2),
                                 steer,
-                                player_segment['p2']['world']['y'] - player_segment['p1']['world']['y'], keys[pygame.K_SPACE])
+                                player_segment['p2']['world']['y'] - player_segment['p1']['world']['y'], nitro_is_on)
 
 
 

@@ -5,7 +5,7 @@ import pygame
 import math
 from sprites import sprite_list
 
-SPRITE_SCALE = 0.3 * (1/sprite_list['PLAYER_STRAIGHT']['w'])
+SPRITE_SCALE = 0.3 * (1/sprite_list['1_PLAYER_STRAIGHT']['w']) #1_
 
 class Colors:
     sky = pygame.Color("#72D7EE")
@@ -27,7 +27,7 @@ class Game:
         Load images
         """
         images = {}
-        sprite_sheet = pygame.image.load("media/sprites_neu.png").convert_alpha()
+        sprite_sheet = pygame.image.load("media/spritesheet.png").convert_alpha()
         for name, sprite in sprite_list.items():
             images[name] = sprite_sheet.subsurface(pygame.Rect(sprite['x'], sprite['y'], sprite['w'], sprite['h'])).convert_alpha()
 
@@ -289,7 +289,7 @@ class Render:
         surface.blit(background, (destX2, destY))
 
 
-    def player(surface, width, height, resolution, roadWidth, sprites, speed_percent, scale, destX, destY, steer, updown, nitro):
+    def player(surface, width, height, resolution, roadWidth, sprites, speed_percent, scale, destX, destY, steer, updown, nitro, player_num = 1):
         """
         Draw player
         """
@@ -300,7 +300,7 @@ class Render:
 
         nitro_prefix = '_NITRO' if nitro else ''
 
-        sprite_key = f'PLAYER_{uphill}{direction}{nitro_prefix}'
+        sprite_key = f'{player_num}_PLAYER_{uphill}{direction}{nitro_prefix}'
         sprite = sprites[sprite_key]
 
         """

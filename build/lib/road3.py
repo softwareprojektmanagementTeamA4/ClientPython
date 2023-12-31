@@ -129,11 +129,15 @@ class GameWindow:
                 speed = Util.accelerate(speed, breaking, delta_time)
             else:                       # slow down if not pressing forward or backward
                 speed = Util.accelerate(speed, decel, delta_time)
-
             if keys[pygame.K_SPACE]:    # For testing purposes
-                speed *= 2
+                speed = Util.accelerate(speed, accel * 2.5, delta_time) # 2,5x so schnell Beschleunigen
             if keys[pygame.K_w]:        # For testing purposes
                 print (hill_offset)
+
+            # Esc key to quit
+            if keys[pygame.K_ESCAPE]:
+                pygame.quit()
+                sys.exit()
 
             if ((playerX < -1) or (playerX > 1)):
 
@@ -314,7 +318,7 @@ class GameWindow:
                                 window_width/2,
                                 (window_height/2) - (camera_depth/playerZ * Util.interpolate(player_segment['p1']['camera']['y'], player_segment['p2']['camera']['y'], player_percent) * window_height/2),
                                 steer,
-                                player_segment['p2']['world']['y'] - player_segment['p1']['world']['y'])
+                                player_segment['p2']['world']['y'] - player_segment['p1']['world']['y'], keys[pygame.K_SPACE])
 
 
 
@@ -586,5 +590,5 @@ class GameWindow:
 
 
 
-# game = GameWindow()
-# game.run()
+game = GameWindow()
+game.run()

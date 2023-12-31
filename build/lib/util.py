@@ -27,7 +27,7 @@ class Game:
         Load images
         """
         images = {}
-        sprite_sheet = pygame.image.load("media/sprites.png").convert_alpha()
+        sprite_sheet = pygame.image.load("media/sprites_neu.png").convert_alpha()
         for name, sprite in sprite_list.items():
             images[name] = sprite_sheet.subsurface(pygame.Rect(sprite['x'], sprite['y'], sprite['w'], sprite['h'])).convert_alpha()
 
@@ -268,12 +268,12 @@ class Render:
         rotation = rotation or 0
         background_offset = offset or 0
 
-        imageW = layer['w']*10
+        imageW = layer['w']
         imageH = layer['h']
 
         sourceX = layer['x'] + math.floor(layer['w'] * rotation)
         sourceY = layer['y']
-        sourceW = min(imageW, layer['x'] + layer['w'] - sourceX)
+        sourceW = min(imageW, imageW - sourceX)
         sourceH = imageH
 
         destX = 0
@@ -281,29 +281,46 @@ class Render:
         destW = math.floor(width * (sourceW / imageW))
         destH = height
 
-        # background = pygame.transform.scale(background, (imageW * 2, imageH))
-        background = pygame.transform.scale(background, (width * 2, height)).convert_alpha()
-        # background = pygame.transform.scale(background, (destW, destH))
-        # surface.blit(background, background_pos)
+
         surface.blit(background, (destX, destY), (sourceX, sourceY, sourceW, sourceH))
 
-        if (sourceW < imageW):
-            surface.blit(background, (layer['x'], sourceY), (imageW-sourceW, sourceH, destW-1, destH))
-            # surface.blit(background, (destW-1, destY), (layer['x'], sourceY, imageW-sourceW, sourceH))
+        destX2 = destX + sourceW
 
-    def player(surface, width, height, resolution, roadWidth, sprites, speed_percent, scale, destX, destY, steer, updown, sprite_cache):
+        surface.blit(background, (destX2, destY))
+
+
+    def player(surface, width, height, resolution, roadWidth, sprites, speed_percent, scale, destX, destY, steer, updown, nitro):
         """
         Draw player
         """
         bounce = (1.5 * random.random() * speed_percent * resolution) * Util.random_choice([-1, 1])
-        if (steer < 0):
-            sprite = sprites['PLAYER_UPHILL_LEFT'] if updown > 0 else sprites['PLAYER_LEFT']
-        elif (steer > 0):
-            sprite = sprites['PLAYER_UPHILL_RIGHT'] if updown > 0 else sprites['PLAYER_RIGHT']
-        else:
-            sprite = sprites['PLAYER_UPHILL_STRAIGHT'] if updown > 0 else sprites['PLAYER_STRAIGHT']
 
-        Render.sprite(surface, width, height, resolution, roadWidth, sprite, scale, destX, destY + bounce, -0.5, -1, 0, sprite_cache)
+        direction = 'LEFT' if steer < 0 else 'RIGHT' if steer > 0 else 'STRAIGHT'
+        uphill = 'UPHILL_' if updown > 0 else ''
+
+        nitro_prefix = '_NITRO' if nitro else ''
+
+        sprite_key = f'PLAYER_{uphill}{direction}{nitro_prefix}'
+        sprite = sprites[sprite_key]
+
+        """
+        if (steer < 0):
+            if nitro:
+                sprite = sprites['PLAYER_UPHILL_LEFT_NITRO'] if updown > 0 else sprites['PLAYER_LEFT_NITRO']
+            else:
+                sprite = sprites['PLAYER_UPHILL_LEFT'] if updown > 0 else sprites['PLAYER_LEFT']
+        elif (steer > 0):
+            if nitro:
+                sprite = sprites['PLAYER_UPHILL_RIGHT_NITRO'] if updown > 0 else sprites['PLAYER_RIGHT_NITRO']
+            else:
+                sprite = sprites['PLAYER_UPHILL_RIGHT'] if updown > 0 else sprites['PLAYER_RIGHT']
+        else:
+            if nitro:
+                sprite = sprites['PLAYER_UPHILL_STRAIGHT_NITRO'] if updown > 0 else sprites['PLAYER_STRAIGHT_NITRO']
+            else:
+                sprite = sprites['PLAYER_UPHILL_STRAIGHT'] if updown > 0 else sprites['PLAYER_STRAIGHT']"""
+
+        Render.sprite(surface, width, height, resolution, roadWidth, sprite, scale, destX, destY + bounce, -0.5, -1, 0)
 
     def get_scaled_sprite(sprite, destW, destH, scaled_sprites_cache):
         """
@@ -314,7 +331,7 @@ class Render:
             scaled_sprites_cache[key] = pygame.transform.scale(sprite, (destW, destH))
         return scaled_sprites_cache[key]
 
-    def sprite(surface, width, height, resolution, roadWidth, sprite, scale, destX, destY, offsetX, offsetY, clipY, scaled_sprites_cache):
+    def sprite(surface, width, height, resolution, roadWidth, sprite, scale, destX, destY, offsetX, offsetY, clipY):
         """
         Draw sprite
         """
@@ -329,7 +346,9 @@ class Render:
             # rect = (destX, destY, destW, destH - clipH)
             # destW = 1000
             # destH = 1000
-            sprite = Render.get_scaled_sprite(sprite, destW, destH, scaled_sprites_cache)
+            # sprite = Render.get_scaled_sprite(sprite, destW, destH, scaled_sprites_cache)
+
+            sprite = pygame.transform.scale(sprite, (int(destW), int(destH)))
 
             # surface.blit(sprite, (destX, destY))
             # surface.blit(sprite, (destX, destY), (0, 0, destW, destH - clipH))
