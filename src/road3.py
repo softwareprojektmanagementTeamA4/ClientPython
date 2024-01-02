@@ -56,6 +56,7 @@ path_background_sky = "background/sky.png"
 path_background_hills = "background/hills.png"
 path_background_trees = "background/trees.png"
 path_nitro_bottle = "media/nitro.png"
+path_nitro_empty_bottle = "media/nitro_empty.png"
 max_nitro = 100
 nitro = 100
 nitro_recharging = False
@@ -381,16 +382,24 @@ class GameWindow:
             self.surface.blit(lapcount_hud_text, (0,50))
 
             nitro_hud = nitro / 100
+            nitro_bottle = None
             pygame.draw.rect(self.surface, pygame.Color(0, 0, 0), [295, 20, (50*10)+10, (10*4)+10], border_radius=5)
             if nitro_recharging:
                 pygame.draw.rect(self.surface, pygame.Color(255, 0, 0), [300, 25, (50*10)*nitro_hud, 10*4], border_radius=5)
+
+                nitro_bottle = pygame.image.load(path_nitro_empty_bottle).convert_alpha()
+                nitro_bottle = pygame.transform.scale(nitro_bottle, (40 * 2.5, 13 * 2.5))
+                nitro_bottle_rect = nitro_bottle.get_rect()
+                nitro_bottle_rect.bottomleft = ((295 + 550, 60))
             else:
                 pygame.draw.rect(self.surface, pygame.Color(77, 187, 230), [300, 25, (50 * 10)*nitro_hud, 10 * 4], border_radius=5)
 
-            nitro_bottle = pygame.image.load("media/nitro.png").convert_alpha()
-            nitro_bottle = pygame.transform.scale(nitro_bottle, (40*2.5,13*2.5))
-            nitro_bottle_rect = nitro_bottle.get_rect()
-            nitro_bottle_rect.bottomleft = ((295 + 550, 60))
+                nitro_bottle = pygame.image.load(path_nitro_bottle).convert_alpha()
+                nitro_bottle = pygame.transform.scale(nitro_bottle, (40 * 2.5, 13 * 2.5))
+                nitro_bottle_rect = nitro_bottle.get_rect()
+                nitro_bottle_rect.bottomleft = ((295 + 550, 60))
+
+
             self.surface.blit(nitro_bottle, nitro_bottle_rect)
 
 
