@@ -22,6 +22,8 @@ class Background:
     trees = {'x': 0, 'y': 0, 'w': 1280, 'h': 480}
 
 class Game:
+
+    @staticmethod
     def load_images():
         """
         Load images
@@ -44,6 +46,7 @@ class Util:
         except ValueError:
             return default
 
+    @staticmethod
     def timestamp():
         """
         Return current timestamp
@@ -288,7 +291,7 @@ class Render:
 
         surface.blit(background, (destX2, destY))
 
-
+    @staticmethod
     def player(surface, width, height, resolution, roadWidth, sprites, speed_percent, scale, destX, destY, steer, updown, nitro, player_num = 1):
         """
         Draw player
@@ -302,23 +305,6 @@ class Render:
 
         sprite_key = f'{player_num}_PLAYER_{uphill}{direction}{nitro_prefix}'
         sprite = sprites[sprite_key]
-
-        """
-        if (steer < 0):
-            if nitro:
-                sprite = sprites['PLAYER_UPHILL_LEFT_NITRO'] if updown > 0 else sprites['PLAYER_LEFT_NITRO']
-            else:
-                sprite = sprites['PLAYER_UPHILL_LEFT'] if updown > 0 else sprites['PLAYER_LEFT']
-        elif (steer > 0):
-            if nitro:
-                sprite = sprites['PLAYER_UPHILL_RIGHT_NITRO'] if updown > 0 else sprites['PLAYER_RIGHT_NITRO']
-            else:
-                sprite = sprites['PLAYER_UPHILL_RIGHT'] if updown > 0 else sprites['PLAYER_RIGHT']
-        else:
-            if nitro:
-                sprite = sprites['PLAYER_UPHILL_STRAIGHT_NITRO'] if updown > 0 else sprites['PLAYER_STRAIGHT_NITRO']
-            else:
-                sprite = sprites['PLAYER_UPHILL_STRAIGHT'] if updown > 0 else sprites['PLAYER_STRAIGHT']"""
 
         Render.sprite(surface, width, height, resolution, roadWidth, sprite, scale, destX, destY + bounce, -0.5, -1, 0)
 

@@ -149,7 +149,7 @@ class GameWindow:
                 nitro_is_on = False
             if nitro_recharging:
                 nitro_is_on = False
-                nitro += 0.0625 #c.a 26 Sek. Recharge
+                nitro += 0.0625     # c.a 26 Sek. Recharge
                 if nitro >= max_nitro:
                     nitro = max_nitro
                     nitro_recharging = False
@@ -382,7 +382,6 @@ class GameWindow:
             self.surface.blit(lapcount_hud_text, (0,50))
 
             nitro_hud = nitro / 100
-            nitro_bottle = None
             pygame.draw.rect(self.surface, pygame.Color(0, 0, 0), [295, 20, (50*10)+10, (10*4)+10], border_radius=5)
             if nitro_recharging:
                 pygame.draw.rect(self.surface, pygame.Color(255, 0, 0), [300, 25, (50*10)*nitro_hud, 10*4], border_radius=5)
@@ -398,7 +397,6 @@ class GameWindow:
                 nitro_bottle = pygame.transform.scale(nitro_bottle, (40 * 2.5, 13 * 2.5))
                 nitro_bottle_rect = nitro_bottle.get_rect()
                 nitro_bottle_rect.bottomleft = ((295 + 550, 60))
-
 
             self.surface.blit(nitro_bottle, nitro_bottle_rect)
 
