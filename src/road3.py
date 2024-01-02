@@ -50,7 +50,8 @@ off_road_decel = -max_speed/2      # off road deceleration is somewhere in betwe
 off_road_limit = max_speed/4       # limit when off road deceleration no longer applies (e.g. you can always go at least this speed even when off road)
 total_cars = 200                   # total number of cars on the road
 current_lap_time = 0               # current lap time
-last_lap_time = None               # last lap time
+last_lap_time = 0               # last lap time
+current_lap = 0
 path_background_sky = "background/sky.png"
 path_background_hills = "background/hills.png"
 path_background_trees = "background/trees.png"
@@ -81,6 +82,8 @@ class GameWindow:
         pygame.init()
         pygame.display.set_caption('Road3')
         self.surface = pygame.display.set_mode((window_width, window_height))
+        self.font = pygame.font.SysFont('Georgia', 24, bold=False)
+        self.hud = pygame.Surface((window_width, window_height), pygame.SRCALPHA)
         self.clock = pygame.time.Clock()
 
         self.background_sky = pygame.image.load(path_background_sky).convert_alpha()
@@ -167,6 +170,20 @@ class GameWindow:
 
             playerX = Util.limit(playerX, -2, 2) # dont ever let player go too far out of bounds
             speed = Util.limit(speed, 0, max_speed) # or exceed maxSpeed
+
+            if position > playerZ:
+                global current_lap_time, last_lap_time, current_lap
+                print("SPEED: ", math.ceil(speed/100))
+                if current_lap_time != 0 and (start_position < playerZ):
+                    last_lap_time = current_lap_time
+                    current_lap_time = 0
+                    current_lap += 1
+                    print("LAST LAP:", last_lap_time)
+                else:
+                    current_lap_time += delta_time
+
+
+
 
         def update_cars(delta_time, player_segment, player_w):
             for n in range(len(cars)):
@@ -339,7 +356,20 @@ class GameWindow:
 
             render()
             self.last_time = self.time_now
+            hudupdate()
 
+        def hudupdate():
+            pygame.draw.rect(self.hud, pygame.Color(255, 0, 0, 75), [0, 0, window_width, window_height/8])
+            self.surface.blit(self.hud, (0,0))
+
+            speed_hud_text = self.font.render(str(int(speed/100)) + " Km/h", True, 'black')
+            self.surface.blit(speed_hud_text, (0,0))
+
+            last_lap_hud_text = self.font.render("Last Lap: " + str(round(last_lap_time, 2)) + " Sekunden", True, 'black')
+            self.surface.blit(last_lap_hud_text, (0,25))
+
+            lapcount_hud_text = self.font.render(str(current_lap) + "/4 Laps", True, 'black')
+            self.surface.blit(lapcount_hud_text, (0,50))
 
 ############################################################################################################
         # Road build functions
@@ -575,9 +605,28 @@ class GameWindow:
         sprites = Game.load_images()
         reset()
         # main game loop
+
+        players = []
+
+        players.append("Bjarne")
+        players.append("Danny")
+        players.append("Lukas")
+
+        global speed
         while 1:
+            keys = pygame.key.get_pressed()
             self.clock.tick(fps)
             frame()
+
+            race_finished_font = pygame.font.SysFont("freesansbold.ttf", 72)
+            race_finished_player_font = pygame.font.SysFont("freesansbold.ttf", 36)
+            race_finished_text = race_finished_font.render("RACE FINISHED", True, 'red')
+            self.surface.blit(race_finished_text, (window_width/3,window_height/4))
+
+            for i, player in enumerate(players):
+                race_finished_player_text = race_finished_player_font.render(str(i + 1) + "# " + player, True, 'white')
+                self.surface.blit(race_finished_player_text, (window_width / 3, window_height / 3 + i * 30))
+
             # pygame.display.update()
             pygame.display.flip()
 
