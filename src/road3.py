@@ -69,6 +69,7 @@ nitro = 100
 nitro_recharging = False
 nitro_is_on = False
 place = 1
+finished_players = []
 
 #########################################################
 road_length = 500                 # length of our road
@@ -98,6 +99,7 @@ class GameWindow:
         self.font = pygame.font.SysFont('Georgia', 24, bold=False)
         self.hud = pygame.Surface((window_width, window_height), pygame.SRCALPHA)
         self.clock = pygame.time.Clock()
+        self.username = 'unknown'
 
         self.background_sky = pygame.image.load(path_background_sky).convert_alpha()
         self.background_hills = pygame.image.load(path_background_hills).convert_alpha()
@@ -106,7 +108,7 @@ class GameWindow:
         self.background = pygame.Surface((window_width, window_height))
 
 
-    def run(self, sio, offlinemode, id, client_ids_server, is_host):
+    def run(self, sio, offlinemode, id, client_ids_server, is_host, username):
         """
         Main game loop
         """
@@ -118,6 +120,7 @@ class GameWindow:
         self.id = id
         self.is_host = is_host
         self.game_is_loaded = False
+        self.username = username
 
         def update(delta_time):
             """
@@ -259,7 +262,7 @@ class GameWindow:
             """
             Send data to server
             """
-            sio.emit('player_data', {'playerX': playerX, 'position': position, 'player_num': player_num, 'speed': speed, 'nitro': nitro_is_on})
+            sio.emit('player_data', {'username': username,'playerX': playerX, 'position': position, 'player_num': player_num, 'speed': speed, 'nitro': nitro_is_on, 'current_lap': current_lap})
             if is_host:
                 sio.emit('npc_car_data', cars)
                 
@@ -425,7 +428,9 @@ class GameWindow:
                                 other_player_num = player_cars[player]['player_num']
                                 car_percent = Util.percent_remaining(player_cars[player]['position'] + playerZ, segment_length)
                                 place = 1
-                                if player_cars[player]['position'] > position:
+                                if player_cars[player]['current_lap'] > 4:
+                                    finished_players.append(player_cars[player]['username'])
+                                if player_cars[player]['position'] > position and player_cars[player]['current_lap'] == current_lap:
                                     place += 1
                                 if player_cars[player]['nitro']:
                                     sprite = sprites[f'{other_player_num}_PLAYER_STRAIGHT_NITRO']
@@ -504,7 +509,6 @@ class GameWindow:
                 nitro_bottle_rect.bottomleft = ((295 + 550, 60))
             if not offlinemode:
                 global place
-                print(place)
                 player_place_font = pygame.font.SysFont("freesansbold.ttf", 72)
                 player_place_text = player_place_font.render(str(place) + ".", True, 'red')
                 self.surface.blit(player_place_text, (0, 100))
@@ -797,12 +801,6 @@ class GameWindow:
 
         # Start of the game
 
-        players = []
-
-        players.append("Bjarne")
-        players.append("Danny")
-        players.append("Lukas")
-
         # Game.
         sprites = Game.load_images()
         reset()
@@ -812,17 +810,18 @@ class GameWindow:
             self.clock.tick(fps)
             frame()
 
-            # Race Finish Screen, muss noch mit dem Server abgestimmt und in eine Funktion gepackt werden
-            '''
-            race_finished_font = pygame.font.SysFont("freesansbold.ttf", 72)
-            race_finished_player_font = pygame.font.SysFont("freesansbold.ttf", 36)
-            race_finished_text = race_finished_font.render("RACE FINISHED", True, 'red')
-            self.surface.blit(race_finished_text, (window_width/3,window_height/4))
+            if current_lap > 4:
+                finished_players.append(username)
 
-            for i, player in enumerate(players):
-                race_finished_player_text = race_finished_player_font.render(str(i + 1) + "# " + player, True, 'white')
-                self.surface.blit(race_finished_player_text, (window_width / 3, window_height / 3 + i * 30))
-            '''
+                race_finished_font = pygame.font.SysFont("freesansbold.ttf", 72)
+                race_finished_player_font = pygame.font.SysFont("freesansbold.ttf", 36)
+                race_finished_text = race_finished_font.render("RACE FINISHED", True, 'red')
+                self.surface.blit(race_finished_text, (window_width/3,window_height/4))
+
+                for i, player in enumerate(finished_players):
+                    race_finished_player_text = race_finished_player_font.render(str(i + 1) + "# " + player, True, 'white')
+                    self.surface.blit(race_finished_player_text, (window_width / 3, window_height / 3 + i * 30))
+
             # pygame.display.update()
             pygame.display.flip()
 
