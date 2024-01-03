@@ -428,9 +428,10 @@ class GameWindow:
                                 other_player_num = player_cars[player]['player_num']
                                 car_percent = Util.percent_remaining(player_cars[player]['position'] + playerZ, segment_length)
                                 place = 1
-                                if player_cars[player]['current_lap'] > 4:
-                                    finished_players.append(player_cars[player]['username'])
-                                if player_cars[player]['position'] > position and player_cars[player]['current_lap'] == current_lap:
+                                if player_cars[player]['current_lap'] > 3:
+                                    if not player_cars[player]['username'] in finished_players:
+                                        finished_players.append(player_cars[player]['username'])
+                                if player_cars[player]['position'] > position and player_cars[player]['current_lap'] >= current_lap:
                                     place += 1
                                 if player_cars[player]['nitro']:
                                     sprite = sprites[f'{other_player_num}_PLAYER_STRAIGHT_NITRO']
@@ -514,6 +515,20 @@ class GameWindow:
                 self.surface.blit(player_place_text, (0, 100))
 
             self.surface.blit(nitro_bottle, nitro_bottle_rect)
+
+        def endscreen():
+            if current_lap > 3:
+                if not username in finished_players:
+                    finished_players.append(username)
+
+                race_finished_font = pygame.font.SysFont("freesansbold.ttf", 72)
+                race_finished_player_font = pygame.font.SysFont("freesansbold.ttf", 36)
+                race_finished_text = race_finished_font.render("RACE FINISHED", True, 'red')
+                self.surface.blit(race_finished_text, (window_width/3,window_height/4))
+
+                for i, player in enumerate(finished_players):
+                    race_finished_player_text = race_finished_player_font.render(str(i + 1) + "# " + player, True, 'white')
+                    self.surface.blit(race_finished_player_text, (window_width / 3, window_height / 3 + i * 30))
 
 
 ############################################################################################################
@@ -809,22 +824,9 @@ class GameWindow:
         while 1:
             self.clock.tick(fps)
             frame()
-
-            if current_lap > 4:
-                finished_players.append(username)
-
-                race_finished_font = pygame.font.SysFont("freesansbold.ttf", 72)
-                race_finished_player_font = pygame.font.SysFont("freesansbold.ttf", 36)
-                race_finished_text = race_finished_font.render("RACE FINISHED", True, 'red')
-                self.surface.blit(race_finished_text, (window_width/3,window_height/4))
-
-                for i, player in enumerate(finished_players):
-                    race_finished_player_text = race_finished_player_font.render(str(i + 1) + "# " + player, True, 'white')
-                    self.surface.blit(race_finished_player_text, (window_width / 3, window_height / 3 + i * 30))
-
+            endscreen()
             # pygame.display.update()
             pygame.display.flip()
-
             # handle quit event
             for event in pygame.event.get([pygame.QUIT]):
                 if event.type == pygame.QUIT:
