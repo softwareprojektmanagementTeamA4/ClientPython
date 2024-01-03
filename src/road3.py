@@ -424,13 +424,13 @@ class GameWindow:
                         for player in player_cars:
                             if player == id: continue
                             other_player_segment = find_segment(player_cars[player]['position'] + playerZ)
+                            if player_cars[player]['current_lap'] > 3:
+                                if not player_cars[player]['username'] in finished_players:
+                                    finished_players.append(player_cars[player]['username'])
                             if segment == other_player_segment:
                                 other_player_num = player_cars[player]['player_num']
                                 car_percent = Util.percent_remaining(player_cars[player]['position'] + playerZ, segment_length)
                                 place = 1
-                                if player_cars[player]['current_lap'] > 3:
-                                    if not player_cars[player]['username'] in finished_players:
-                                        finished_players.append(player_cars[player]['username'])
                                 if player_cars[player]['position'] > position and player_cars[player]['current_lap'] >= current_lap:
                                     place += 1
                                 if player_cars[player]['nitro']:
