@@ -124,7 +124,7 @@ class GameWindow:
             """
             global position, speed, playerX, playerZ, sky_offset, hill_offset, tree_offset, max_nitro, nitro, nitro_recharging, nitro_is_on
             player_segment = find_segment(position + playerZ)
-            playerW = sprite_list['1_PLAYER_1_STRAIGHT']['w'] * SPRITE_SCALE #1_
+            playerW = sprite_list['1_PLAYER_STRAIGHT']['w'] * SPRITE_SCALE #1_
             speed_percent = speed/max_speed
             dx = delta_time * 2 * speed_percent # at top speed, should be able to cross from left to right (-1 to 1) in 1 second
             start_position = position
@@ -217,6 +217,14 @@ class GameWindow:
                 send_data()
                 global client_ids
 
+            if position > playerZ:
+                global current_lap_time, last_lap_time, current_lap
+                if current_lap_time != 0 and (start_position < playerZ):
+                    last_lap_time = current_lap_time
+                    current_lap_time = 0
+                    current_lap += 1
+                else:
+                    current_lap_time += delta_time
 
         """
         SockeIO Eventhandler
@@ -256,23 +264,8 @@ class GameWindow:
                 sio.emit('npc_car_data', cars)
                 
 
-            if position > playerZ:
-                global current_lap_time, last_lap_time, current_lap
-                if current_lap_time != 0 and (start_position < playerZ):
-                    last_lap_time = current_lap_time
-                    current_lap_time = 0
-                    current_lap += 1
-                else:
-                    current_lap_time += delta_time
+            
 
-            if position > playerZ:
-                global current_lap_time, last_lap_time, current_lap
-                if current_lap_time != 0 and (start_position < playerZ):
-                    last_lap_time = current_lap_time
-                    current_lap_time = 0
-                    current_lap += 1
-                else:
-                    current_lap_time += delta_time
 
         def update_cars(delta_time, player_segment, player_w):
             for n in range(len(cars)):
@@ -825,10 +818,3 @@ class GameWindow:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-
-
-
-
-
-game = GameWindow()
-game.run()
