@@ -423,7 +423,7 @@ class GameWindow:
                             if (segment == other_player_segment):
                                 other_player_num = player_cars[player]['player_num']
                                 car_percent = Util.percent_remaining(player_cars[player]['position'] + playerZ, segment_length)
-                                sprite = sprites[f'PLAYER_{other_player_num}_STRAIGHT']
+                                sprite = sprites[f'{other_player_num}_PLAYER_STRAIGHT']
                                 sprite_scale = Util.interpolate(segment['p1']['screen']['scale'], segment['p2']['screen']['scale'], car_percent)
                                 spriteX = Util.interpolate(segment['p1']['screen']['x'], segment['p2']['screen']['x'], car_percent) + (sprite_scale * player_cars[player]['playerX'] * road_width * window_width/2)
                                 spriteY = Util.interpolate(segment['p1']['screen']['y'], segment['p2']['screen']['y'], car_percent)
