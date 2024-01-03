@@ -296,6 +296,7 @@ class Render:
         """
         Draw player
         """
+        # player number 1 = red car, 2 = green car, 3 = yellow car
         bounce = (1.5 * random.random() * speed_percent * resolution) * Util.random_choice([-1, 1])
 
         direction = 'LEFT' if steer < 0 else 'RIGHT' if steer > 0 else 'STRAIGHT'

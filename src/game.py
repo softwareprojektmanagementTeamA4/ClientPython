@@ -18,6 +18,7 @@ pygame.display.set_caption('RaceGame')
 fps = 60
 timer = pygame.time.Clock()
 font = pygame.font.SysFont('Georgia', 24, bold=False)
+client_id = None
 
 connectmenue = True
 menueactive = False
@@ -30,7 +31,9 @@ input_group = pygame.sprite.Group(username_input_box)
 
 sio = socketio.Client()
 username = None
-usernames = None
+usernames = []
+client_ids = {}
+is_host = False
 
 road_width_slider = Slider(screen, WIDTH//2 - 150, (HEIGHT//2) - 75, 300, 20, min = 500, max = 3000, step=1, initial=2000)
 road_width_label = font.render('Road Width ', True, 'white')
@@ -90,6 +93,19 @@ def connect():
     print("I'm connected! ")
 
 @sio.event
+def getPlayerID(socket_id):
+    global client_id
+    client_id = socket_id
+
+@sio.event
+def getHostID(host_id):
+    global is_host
+    if host_id == client_id:
+        is_host = True
+    else:
+        is_host = False
+
+@sio.event
 def connect_error(data):
     print("The connection failed!")
 
@@ -105,8 +121,17 @@ def disconnect():
 def playersConnected(data):
     print("PLAYER CONNECTED")
     global usernames
-    usernames = data['usernames']
+    global client_id
+    global client_ids
+    usernames = []
+
+    for key in data:
+        usernames.append(data[key])
+    
+    client_ids = data
+
     print('Updated Users:', usernames)
+
 
 # Gameloop für das Ausführen des Programms
 run = True
@@ -150,6 +175,7 @@ while run:
                 #pygame.time.delay(3000)
                 menueactive = True
                 offlinemode = True
+                is_host = True
                 events = None
     # Der User ist im Hauptmenü.
     if menueactive:
@@ -191,7 +217,13 @@ while run:
                 screen = pygame.display.set_mode((WIDTH, HEIGHT))
             if fullscreen_toggle.getValue() and resolution_dropdown.getSelected()[0] != 480:
                 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
-            gam.run()
+
+#############################################################################################################################################
+#############################################################################################################################################
+            gam.run(sio, offlinemode, client_id, client_ids, is_host)
+#############################################################################################################################################
+#############################################################################################################################################
+            
         elif settings_button.button.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0] and events is not None:
             settingsactive = True
             menueactive = False
