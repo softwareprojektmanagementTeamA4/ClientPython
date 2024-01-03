@@ -165,10 +165,9 @@ class GameWindow:
                 nitro_is_on = False
             if nitro_recharging:
                 nitro_is_on = False
-                nitro += 0.0625     # c.a 26 Sek. Recharge
-                if nitro >= max_nitro:
-                    nitro = max_nitro
-                    nitro_recharging = False
+                nitro += 0.0625 
+                nitro = min(nitro, max_nitro) 
+                nitro_recharging = nitro < max_nitro
             # Esc key to quit
             if keys[pygame.K_ESCAPE]:
                 pygame.quit()
