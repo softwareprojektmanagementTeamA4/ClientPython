@@ -68,6 +68,7 @@ max_nitro = 100
 nitro = 100
 nitro_recharging = False
 nitro_is_on = False
+place = 1
 
 #########################################################
 road_length = 500                 # length of our road
@@ -414,6 +415,7 @@ class GameWindow:
 
                 # Render other players (if multiplayer)
                 if not offlinemode:
+                    global place
                     while True:
                         player_car_lock.acquire()
                         for player in player_cars:
@@ -422,6 +424,9 @@ class GameWindow:
                             if segment == other_player_segment:
                                 other_player_num = player_cars[player]['player_num']
                                 car_percent = Util.percent_remaining(player_cars[player]['position'] + playerZ, segment_length)
+                                place = 1
+                                if player_cars[player]['position'] > position:
+                                    place += 1
                                 if player_cars[player]['nitro']:
                                     sprite = sprites[f'{other_player_num}_PLAYER_STRAIGHT_NITRO']
                                 else:
@@ -497,6 +502,12 @@ class GameWindow:
                 nitro_bottle = pygame.transform.scale(nitro_bottle, (40 * 2.5, 13 * 2.5))
                 nitro_bottle_rect = nitro_bottle.get_rect()
                 nitro_bottle_rect.bottomleft = ((295 + 550, 60))
+            if not offlinemode:
+                global place
+                print(place)
+                player_place_font = pygame.font.SysFont("freesansbold.ttf", 72)
+                player_place_text = player_place_font.render(str(place) + ".", True, 'red')
+                self.surface.blit(player_place_text, (0, 100))
 
             self.surface.blit(nitro_bottle, nitro_bottle_rect)
 
