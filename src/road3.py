@@ -420,10 +420,10 @@ class GameWindow:
                         for player in player_cars:
                             if player == id: continue
                             other_player_segment = find_segment(player_cars[player]['position'] + playerZ)
-                            if (segment == other_player_segment):
+                            if segment == other_player_segment:
                                 other_player_num = player_cars[player]['player_num']
                                 car_percent = Util.percent_remaining(player_cars[player]['position'] + playerZ, segment_length)
-                                if (player_cars[player]['nitro']):
+                                if player_cars[player]['nitro']:
                                     sprite = sprites[f'{other_player_num}_PLAYER_STRAIGHT_NITRO']
                                 else:
                                     sprite = sprites[f'{other_player_num}_PLAYER_STRAIGHT']
