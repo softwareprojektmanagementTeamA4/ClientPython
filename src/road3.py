@@ -59,6 +59,7 @@ total_cars = 50                   # total number of cars on the road
 current_lap_time = 0               # current lap time
 last_lap_time = 0               # last lap time
 current_lap = 0
+maxlap = 3
 path_background_sky = "background/sky.png"
 path_background_hills = "background/hills.png"
 path_background_trees = "background/trees.png"
@@ -246,7 +247,19 @@ class GameWindow:
                 player_car_lock.release()
                 break
 
-
+        @sio.event()
+        def receive_order(order):
+            """
+            Receive order from server
+            """
+            order = order[::-1]
+            global place
+            for i in order:
+                if i['id'] == id:
+                    place = order.index(i) + 1
+            
+        
+                
             
         @sio.event()
         def receive_npc_car_data(data):
@@ -262,7 +275,7 @@ class GameWindow:
             """
             Send data to server
             """
-            sio.emit('player_data', {'username': username,'playerX': playerX, 'position': position, 'player_num': player_num, 'speed': speed, 'nitro': nitro_is_on, 'current_lap': current_lap})
+            sio.emit('player_data', {'id': id, 'username': username,'playerX': playerX, 'position': position, 'player_num': player_num, 'speed': speed, 'nitro': nitro_is_on, 'current_lap': current_lap})
             if is_host:
                 sio.emit('npc_car_data', cars)
                 
@@ -424,15 +437,15 @@ class GameWindow:
                         for player in player_cars:
                             if player == id: continue
                             other_player_segment = find_segment(player_cars[player]['position'] + playerZ)
-                            if player_cars[player]['current_lap'] > 3:
+                            if player_cars[player]['current_lap'] > maxlap:
                                 if not player_cars[player]['username'] in finished_players:
                                     finished_players.append(player_cars[player]['username'])
                             if segment == other_player_segment:
                                 other_player_num = player_cars[player]['player_num']
                                 car_percent = Util.percent_remaining(player_cars[player]['position'] + playerZ, segment_length)
-                                place = 1
-                                if player_cars[player]['position'] > position and player_cars[player]['current_lap'] >= current_lap:
-                                    place += 1
+                                # place = 1
+                                # if player_cars[player]['position'] > position and player_cars[player]['current_lap'] >= current_lap:
+                                #     place += 1
                                 if player_cars[player]['nitro']:
                                     sprite = sprites[f'{other_player_num}_PLAYER_STRAIGHT_NITRO']
                                 else:
@@ -517,7 +530,7 @@ class GameWindow:
             self.surface.blit(nitro_bottle, nitro_bottle_rect)
 
         def endscreen():
-            if current_lap > 3:
+            if current_lap > maxlap:
                 if not username in finished_players:
                     finished_players.append(username)
 
