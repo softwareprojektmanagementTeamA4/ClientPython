@@ -5,7 +5,7 @@ import pygame
 import math
 from sprites import sprite_list
 
-SPRITE_SCALE = 0.3 * (1/sprite_list['1_PLAYER_STRAIGHT']['w']) #1_
+SPRITE_SCALE = 0.3 * (1/sprite_list['1_PLAYER_STRAIGHT']['w'])
 
 class Colors:
     sky = pygame.Color("#72D7EE")
@@ -16,10 +16,12 @@ class Colors:
     start = {'road': pygame.Color("#FFFFFF"), 'grass': pygame.Color("#FFFFFF"), 'rumble': pygame.Color("#FFFFFF")}
     finish = {'road': pygame.Color("#000000"), 'grass': pygame.Color("#000000"), 'rumble': pygame.Color("#000000")}
 
+
 class Background:
     hills = {'x': 0, 'y': 0, 'w': 1280, 'h': 480}
     sky = {'x': 0, 'y': 0, 'w': 1280, 'h': 480}
     trees = {'x': 0, 'y': 0, 'w': 1280, 'h': 480}
+
 
 class Game:
 
@@ -35,8 +37,9 @@ class Game:
 
         return images
 
-class Util:
 
+class Util:
+    @staticmethod
     def to_int(number, default):
         """
         Convert number to int
@@ -53,87 +56,101 @@ class Util:
         """
         return time.time()
 
+    @staticmethod
     def accelerate(speed, accel, delta_time):
         """
         Accelerate speed by accel, with delta_time
         """
         return speed + (accel * delta_time)
 
+    @staticmethod
     def limit(value, low, high):
         """
         Limit value to be between low and high
         """
         return max(low, min(value, high))
 
+    @staticmethod
     def random_int(low, high):
         """
         Return random integer between low and high
         """
         return random.randint(low, high)
-    
+
+    @staticmethod
     def random_choice(options):
         """
         Return random choice from options
         """
         return options[random.randint(0, len(options) - 1)]
-    
+
+    @staticmethod
     def random_key(options):
         """
         Return random key from options
         """
         return random.choice(list(options.keys()))
 
+    @staticmethod
     def random_choice_dict(options):
         """
         Return random choice from options
         """
         return random.choice(list(options.items()))
 
+    @staticmethod
     def interpolate(a, b, percent):
         """
         Interpolate from a to b by percent
         """
         return a + (b - a) * percent
 
+    @staticmethod
     def ease_in(a, b, percent):
         """
         Ease in from a to b by percent
         """
         return a + (b - a) * pow(percent, 2)
 
+    @staticmethod
     def index_of(array, item):
         """
         Return index of item in array
         """
         for i in range(len(array)):
-            if (array[i] == item):
+            if array[i] == item:
                 return i
         return -1
 
+    @staticmethod
     def ease_out(a, b, percent):
         """
         Ease out from a to b by percent
         """
         return a + (b - a) * (1 - pow(1 - percent, 2))
 
+    @staticmethod
     def ease_in_out(a, b, percent):
         """
         Ease in and out from a to b by percent
         """
         return a + (b - a) * ((-cos(percent * pi) / 2) + 0.5)
 
+    @staticmethod
     def exponential_fog(distance, density):
         """
         Return exponential fog value for distance and density
         """
         return 1 / (pow(e, (distance * distance * density)))
 
+    @staticmethod
     def percent_remaining(n, total):
         """
         Return percent remaining of n and total
         """
         return (n % total) / total
 
+    @staticmethod
     def increase(start, increment, max):
         """
         Increase value by increment, but don't go over max
@@ -146,28 +163,15 @@ class Util:
             result += max
         return result
 
-    # def project(p, cameraX, cameraY, cameraZ, camera_depth, width, height, roadWidth):
-    #     """
-    #     Project p onto screen
-    #     """
-    #     p.camera.x = (p.world.x or 0) - cameraX
-    #     p.camera.y = (p.world.y or 0) - cameraY
-    #     p.camera.z = (p.world.z or 0) - cameraZ
-    #     p.screen.scale = camera_depth / p.camera.z
-    #     p.screen.x = round((width / 2) + (p.screen.scale * p.camera.x * width / 2))
-    #     p.screen.y = round((height / 2) - (p.screen.scale * p.camera.y * height / 2))
-    #     p.screen.w = round((p.screen.scale * roadWidth * width / 2))
-
+    @staticmethod
     def project(p, cameraX, cameraY, cameraZ, camera_depth, width, height, roadWidth):
         """
         Project p onto screen
         """
-        #TODO: bug in the screen scale = camera_depth / p.camera.z 
-
         p['camera']['x'] = (p['world']['x'] or 0) - cameraX
         p['camera']['y'] = (p['world']['y'] or 0) - cameraY
         p['camera']['z'] = (p['world']['z'] or 0) - cameraZ
-        if (p['camera']['z'] > 0):
+        if p['camera']['z'] > 0:
             p['screen']['scale'] = camera_depth / p['camera']['z']
         else:
             p['screen']['scale'] = 0
@@ -175,6 +179,7 @@ class Util:
         p['screen']['y'] = round((height / 2) - (p['screen']['scale'] * p['camera']['y'] * height / 2))
         p['screen']['w'] = round(               (p['screen']['scale'] * roadWidth * width / 2))
 
+    @staticmethod
     def overlap(x1, w1, x2, w2, percent):
         """
         Return percent overlap of x1, w1, x2, w2
@@ -185,27 +190,31 @@ class Util:
         min2 = x2 - (w2 * half)
         max2 = x2 + (w2 * half)
         return not ((max1 < min2) or (min1 > max2))
-    
+
+
 class Render:
+    @staticmethod
     def rumble_width(projectedRoadWidth, lanes):
         """
         Return rumble width
         """
         return projectedRoadWidth / max(6,  2 * lanes)
-    
+
+    @staticmethod
     def lane_marker_width(projectedRoadWidth, lanes):
         """
         Return lane marker width
         """
         return projectedRoadWidth / max(32, 8 * lanes)
 
-
+    @staticmethod
     def polygon(surface, x1, y1, x2, y2, x3, y3, x4, y4, color):
         """
         Draw polygon
         """
         pygame.draw.polygon(surface, color, [(x1, y1), (x2, y2), (x3, y3), (x4, y4)])
 
+    @staticmethod
     def segment(surface, width, lanes, x1, y1, w1, x2, y2, w2, fog, color):
         """
         Draw segment
@@ -223,7 +232,7 @@ class Render:
         Render.polygon(surface, x1 + w1 + r1, y1, x1 + w1, y1, x2 + w2, y2, x2 + w2 + r2, y2, color['rumble'])
         Render.polygon(surface, x1 - w1, y1, x1 + w1, y1, x2 + w2, y2, x2 - w2, y2, color['road'])
         
-        if ('lane' in color):
+        if 'lane' in color:
             lanew1 = w1 * 2 / lanes
             lanew2 = w2 * 2 / lanes
             lanex1 = x1 - w1 + lanew1
@@ -235,35 +244,8 @@ class Render:
         
         Render.fog(surface, 0, y1, width, y2 - y1, fog)
 
-        
-
-    # def background(surface, background, width, height, layer, rotation, offset):
-    #     """
-    #     Draw background
-    #     background has to be a pygame.Surface
-    #     """
-    #     rotation = rotation or 0
-    #     offset = offset or 0
-
-    #     imageW = layer.w/2
-    #     imageH = layer.h
-
-    #     sourceX = layer.x + math.floor(layer.w * rotation)
-    #     sourceY = layer.y
-    #     sourceW = min(imageW, layer.x + layer.w - sourceX)
-    #     sourceH = imageH
-
-    #     destX = 0
-    #     destY = offset
-    #     destW = math.floor(width * (sourceW / imageW))
-    #     destH = height
-
-    #     surface.blit(background, (destX, destY), (sourceX, sourceY, sourceW, sourceH))
-
-    #     if (sourceW < imageW):
-    #         surface.blit(background, (layer.x, sourceY), (imageW-sourceW, sourceH, destW-1, destH))
-
-    def background(surface, background, width, height, layer, rotation, offset):
+    @staticmethod
+    def background(surface, background, layer, rotation, offset):
         """
         Draw background
         background has to be a pygame.Surface
@@ -281,18 +263,13 @@ class Render:
 
         destX = 0
         destY = background_offset
-        destW = math.floor(width * (sourceW / imageW))
-        destH = height
-
 
         surface.blit(background, (destX, destY), (sourceX, sourceY, sourceW, sourceH))
-
         destX2 = destX + sourceW
-
         surface.blit(background, (destX2, destY))
 
     @staticmethod
-    def player(surface, width, height, resolution, roadWidth, sprites, speed_percent, scale, destX, destY, steer, updown, nitro, player_num = 1):
+    def player(surface, width, height, resolution, roadWidth, sprites, speed_percent, scale, destX, destY, steer, updown, nitro, player_num):
         """
         Draw player
         """
@@ -309,6 +286,7 @@ class Render:
 
         Render.sprite(surface, width, height, resolution, roadWidth, sprite, scale, destX, destY + bounce, -0.5, -1, 0)
 
+    @staticmethod
     def get_scaled_sprite(sprite, destW, destH, scaled_sprites_cache):
         """
         Return scaled sprite
@@ -318,6 +296,7 @@ class Render:
             scaled_sprites_cache[key] = pygame.transform.scale(sprite, (destW, destH))
         return scaled_sprites_cache[key]
 
+    @staticmethod
     def sprite(surface, width, height, resolution, roadWidth, sprite, scale, destX, destY, offsetX, offsetY, clipY):
         """
         Draw sprite
@@ -328,25 +307,18 @@ class Render:
         destX = destX + (destW * (offsetX or 0))
         destY = destY + (destH * (offsetY or 0))
 
-        clipH = max(0, destY + destH - clipY) if (clipY) else 0
-        if (clipH < destH):
-            # rect = (destX, destY, destW, destH - clipH)
-            # destW = 1000
-            # destH = 1000
-            # sprite = Render.get_scaled_sprite(sprite, destW, destH, scaled_sprites_cache)
+        clipH = max(0, destY + destH - clipY) if clipY else 0
 
+        if clipH < destH:
             sprite = pygame.transform.scale(sprite, (int(destW), int(destH)))
-
-            # surface.blit(sprite, (destX, destY))
-            # surface.blit(sprite, (destX, destY), (0, 0, destW, destH - clipH))
             surface.blit(sprite, (destX, destY), (0, 0, destW, destH - clipH))
 
-
+    @staticmethod
     def fog(surface, x, y, width, height, fog):
         """
         Draw fog
         """
-        if (fog < 1):
+        if fog < 1:
             s = pygame.Surface((width, -height + 1))
             s.set_alpha(255 * (1-fog))
             s.fill(Colors.fog)

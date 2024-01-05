@@ -1,12 +1,7 @@
-import math
-import time
-from typing import List
-import pygame
 import sys
 import os
 from util import *
 from sprites import *
-import socketio
 from threading import Lock
 
 src_path = os.path.dirname(__file__)
@@ -108,13 +103,11 @@ class GameWindow:
 
         self.background = pygame.Surface((window_width, window_height))
 
-
     def run(self, sio, offlinemode, id, client_ids_server, is_host, username):
         """
         Main game loop
         """
         global client_ids
-
         client_ids = client_ids_server
         self.sio = sio
         self.offlinemode = offlinemode
@@ -129,9 +122,9 @@ class GameWindow:
             """
             global position, speed, playerX, playerZ, sky_offset, hill_offset, tree_offset, max_nitro, nitro, nitro_recharging, nitro_is_on
             player_segment = find_segment(position + playerZ)
-            playerW = sprite_list['1_PLAYER_STRAIGHT']['w'] * SPRITE_SCALE #1_
+            playerW = sprite_list['1_PLAYER_STRAIGHT']['w'] * SPRITE_SCALE
             speed_percent = speed/max_speed
-            dx = delta_time * 2 * speed_percent # at top speed, should be able to cross from left to right (-1 to 1) in 1 second
+            dx = delta_time * 2 * speed_percent
             start_position = position
 
             if is_host:
@@ -178,16 +171,15 @@ class GameWindow:
                 pygame.quit()
                 sys.exit()
 
-            if ((playerX < -1) or (playerX > 1)):
-
-                if (speed > off_road_limit):
+            if (playerX < -1) or (playerX > 1):
+                if speed > off_road_limit:
                     speed = Util.accelerate(speed, off_road_decel, delta_time) # driving off road slows you down
-            
+
                 for n in range(len(player_segment['sprites'])):
                     sprite = player_segment['sprites'][n]
                     spriteW = sprite['source'][1]['w'] * SPRITE_SCALE
                     x2 = sprite['offset'] + spriteW/2 * (1 if (sprite['offset'] > 0) else -1)
-                    if (Util.overlap(playerX, playerW, x2, spriteW, None)):
+                    if Util.overlap(playerX, playerW, x2, spriteW, None):
                         speed = max_speed/5
                         position = Util.increase(player_segment['p1']['world']['z'], -playerZ, track_length) # stop in front of sprite (at front of segment)
                         break
@@ -195,25 +187,25 @@ class GameWindow:
             for n in range(len(player_segment['cars'])):
                 car = player_segment['cars'][n]
                 carW = car['sprite'][1]['w'] * SPRITE_SCALE
-                if (speed > car['speed']):
-                    if (Util.overlap(playerX, playerW, car['offset'], carW, 0.8)):
+                if speed > car['speed']:
+                    if Util.overlap(playerX, playerW, car['offset'], carW, 0.8):
                         speed = car['speed'] * (car['speed']/speed)
                         position = Util.increase(car['z'], -playerZ, track_length)
                         break
 
             # Collide with other players     
             for n in player_cars:
-                if n == id: continue
+                if n == id:
+                    continue
                 car_segment = find_segment(player_cars[n]['position'] + playerZ)
                 if car_segment != player_segment:
                     continue
                 carW = sprite_list['1_PLAYER_STRAIGHT']['w'] * SPRITE_SCALE
-                if (speed > player_cars[n]['speed']):
-                    if (Util.overlap(playerX, playerW, player_cars[n]['playerX'], carW, 0.8)):
+                if speed > player_cars[n]['speed']:
+                    if Util.overlap(playerX, playerW, player_cars[n]['playerX'], carW, 0.8):
                         speed = player_cars[n]['speed'] * (player_cars[n]['speed']/speed)
                         position = Util.increase(player_cars[n]['position'], -playerZ, track_length)
                         break
-
 
             playerX = Util.limit(playerX, -2, 2) # dont ever let player go too far out of bounds
             speed = Util.limit(speed, 0, max_speed) # or exceed maxSpeed
@@ -257,10 +249,7 @@ class GameWindow:
             for i in order:
                 if i['id'] == id:
                     place = order.index(i) + 1
-            
-        
-                
-            
+
         @sio.event()
         def receive_npc_car_data(data):
             """
@@ -278,9 +267,6 @@ class GameWindow:
             sio.emit('player_data', {'id': id, 'username': username,'playerX': playerX, 'position': position, 'player_num': player_num, 'speed': speed, 'nitro': nitro_is_on, 'current_lap': current_lap})
             if is_host:
                 sio.emit('npc_car_data', cars)
-                
-
-            
 
 
         def update_cars(delta_time, player_segment, player_w):
@@ -291,18 +277,10 @@ class GameWindow:
                 car['z'] = Util.increase(car['z'], delta_time * car['speed'], track_length)
                 car['percent'] = Util.percent_remaining(car['z'], segment_length)  # useful for interpolation during rendering phase
                 new_segment = find_segment(car['z'])
-                if (old_segment != new_segment):
+                if old_segment != new_segment:
                     index = Util.index_of(old_segment['cars'], car)
                     old_segment['cars'].pop(index)
                     new_segment['cars'].append(car)
-
-        # def update_player_start_positions(delta_time, player_segment, player_w):
-        #     for n in range(client_ids):
-
-
-
-                # car = {'id':  {'offset': offset, 'z': z, 'sprite': sprite, 'speed': speed}
-                
 
         def update_car_offset(car, car_segment, player_segment, player_w):
             lookahead = 20
@@ -311,7 +289,7 @@ class GameWindow:
 
             if (car_segment['index'] - player_segment['index']) > draw_distance:
                 return 0
-            
+
             for i in range(1, lookahead):
                 segment = segments[(car_segment['index'] + i) % len(segments)]
 
@@ -343,9 +321,9 @@ class GameWindow:
                         return dir * 1/i * (car['speed'] - otherCar['speed'])/max_speed
 
             # if no cars ahead, but I have somehow ended up off road, then steer back on
-            if (car['offset'] < -0.9):
+            if car['offset'] < -0.9:
                 return 0.1
-            elif (car['offset'] > 0.9):
+            elif car['offset'] > 0.9:
                 return -0.1
             else:
                 return 0        
@@ -371,9 +349,9 @@ class GameWindow:
 
             self.surface.fill('#72D7EE') # clear screen
             
-            Render.background(self.surface, self.background_sky,   window_width, window_height, Background.sky,   sky_offset,  resolution * sky_speed * playerY)  # Render background sky
-            Render.background(self.surface, self.background_hills, window_width, window_height, Background.hills, hill_offset, resolution * hill_speed * playerY)
-            Render.background(self.surface, self.background_trees, window_width, window_height, Background.trees, tree_offset, resolution * tree_speed * playerY)
+            Render.background(self.surface, self.background_sky,   Background.sky,   sky_offset,  resolution * sky_speed * playerY)  # Render background sky
+            Render.background(self.surface, self.background_hills, Background.hills, hill_offset, resolution * hill_speed * playerY)
+            Render.background(self.surface, self.background_trees, Background.trees, tree_offset, resolution * tree_speed * playerY)
 
             # render road
             for n in range(draw_distance):
@@ -418,7 +396,7 @@ class GameWindow:
                         sprite_scale = Util.interpolate(segment['p1']['screen']['scale'], segment['p2']['screen']['scale'], car['percent'])
                         spriteX      = Util.interpolate(segment['p1']['screen']['x'],     segment['p2']['screen']['x'],     car['percent']) + (sprite_scale * car['offset'] * road_width * window_width/2)
                         spriteY      = Util.interpolate(segment['p1']['screen']['y'],     segment['p2']['screen']['y'],     car['percent'])
-                        Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, -0.5, -1, segment['clip']) 
+                        Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, -0.5, -1, segment['clip'])
                     npc_car_lock.release()
                     break
                 for i in range(len(segment['sprites'])):
@@ -458,7 +436,7 @@ class GameWindow:
                         break
 
                 # render player
-                if (segment == player_segment):
+                if segment == player_segment:
                     # calc steering
                     keys = pygame.key.get_pressed()
                     if keys[pygame.K_LEFT]:
@@ -601,7 +579,7 @@ class GameWindow:
             """
             Get last segment y
             """
-            if (len(segments) == 0): return 0
+            if len(segments) == 0: return 0
             return segments[len(segments) - 1]['p2']['world']['y']
         
         def add_straight(num):
@@ -794,8 +772,6 @@ class GameWindow:
                 npc_car_lock.release()
                 break
 
-            
-
         def reset():
 
             global camera_depth
@@ -807,7 +783,7 @@ class GameWindow:
             playerZ = (camera_height * camera_depth)
             resolution = window_height / 480
           
-            if (len(segments) == 0):
+            if len(segments) == 0:
                 reset_road()
                 reset_sprites()
 
