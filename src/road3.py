@@ -267,6 +267,7 @@ class GameWindow:
             cars = data
             put_cars_into_segments()
 
+
         def send_data():
             """
             Send data to server
@@ -735,7 +736,7 @@ class GameWindow:
                 player_num += 1
 
             sio.emit('player_start_positions_data', player_start_positions)
-
+            print(player_start_positions)
             return player_start_positions
         
         @sio.event()
@@ -847,66 +848,7 @@ class GameWindow:
             global place 
             global finished_players 
             global game_finished 
-            fps = 60                           # how many updates per second
-            step = 1/fps                       # how long is each frame
-            window_width = 1024                # logical window width
-            window_height = 768                # logical window height
-            centrifugal_force = 0.3            # centrifugal force multiplier when going around curves
-            offRoadDecel = 0.99                # speed multiplier when off road (e.g. you lose 2% speed each update frame)
-            sky_speed  = 0.001                  # background sky layer scroll speed when going around curve (or up hill)
-            hill_speed = 0.002                 # background hill layer scroll speed when going around curve (or up hill)
-            tree_speed = 0.003                 # background tree layer scroll speed when going around curve (or up hill)
-            sky_offset = 0                     # current sky scroll offset
-            hill_offset = 0                    # current hill scroll offset
-            tree_offset = 0                    # current tree scroll offset
-            segments = []                      # array of road segments
-            cars = []                          # array of cars on the road
-            npc_car_lock = Lock()              # lock for adding cars to segments
 
-            player_start_positions = []        # array of player cars
-            player_car_lock = Lock()           # lock for adding cars to segments
-            player_cars = {}                   # array of player cars
-            player_num = 1                     # player number
-            # background = None                # our background image (loaded below)
-            sprites = None                     # our spritesheet (loaded below)
-            resolution = None                  # scaling factor for multi-resolution support
-            road_width = 2000                  # actually half the roads width, easier math if the road spans from -roadWidth to +roadWidth
-            segment_length = 200               # length of a single segment
-            rumble_length = 3                  # number of segments per red/white rumble strip
-            track_length = None                # z length of entire track (computed)
-            lanes = 3                          # number of lanes
-            field_of_view = 100                # angle (degrees) for field of view
-            camera_height = 1000               # z height of camera
-            camera_depth = None                # z distance camera is from screen (computed)
-            draw_distance = 300                # number of segments to draw
-            playerX = 0                       # player x offset from center of road (-1 to 1 to stay independent of roadWidth)
-            playerZ = None                    # player relative z distance from camera (computed)
-            fog_density = 5                    # exponential fog density
-            position = 1                     # current camera Z position (add playerZ to get player's absolute Z position)
-            speed = 0                          # current speed
-            max_speed = segment_length/step    # top speed (ensure we can't move more than 1 segment in a single frame to make collision detection easier)
-            accel =  max_speed/5               # acceleration rate - tuned until it 'felt' right
-            breaking = -max_speed              # deceleration rate when braking
-            decel = -max_speed/5               # 'natural' deceleration rate when neither accelerating, nor braking
-            off_road_decel = -max_speed/2      # off road deceleration is somewhere in between
-            off_road_limit = max_speed/4       # limit when off road deceleration no longer applies (e.g. you can always go at least this speed even when off road)
-            total_cars = 100                   # total number of cars on the road
-            current_lap_time = 0               # current lap time
-            last_lap_time = 0               # last lap time
-            current_lap = 0
-            maxlap = 3
-            path_background_sky = "background/sky.png"
-            path_background_hills = "background/hills.png"
-            path_background_trees = "background/trees.png"
-            path_nitro_bottle = "media/nitro.png"
-            path_nitro_empty_bottle = "media/nitro_empty.png"
-            max_nitro = 100
-            nitro = 100
-            nitro_recharging = False
-            nitro_is_on = False
-            place = 1
-            finished_players = []
-            game_finished = False
     
             camera_depth = 1 / math.tan((field_of_view/2) * math.pi/180)
             player_z = (camera_height * camera_depth)
@@ -934,14 +876,17 @@ class GameWindow:
 
 
         # Start of the game
-
         # Game.
         sprites = Game.load_images()
         reset()
+        sio.emit('game_start')
+        global player_num
+        print("PLAYER NUMBER", player_num)
         self.game_is_loaded = True
         # main game loop
         while self.game_is_loaded:
             self.clock.tick(fps)
+
             frame()
             endscreen()
             # pygame.display.update()

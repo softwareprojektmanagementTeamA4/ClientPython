@@ -25,6 +25,10 @@ menueactive = False
 connectEnter = False
 settingsactive = False
 offlinemode = False
+canstart = False
+playerready = False
+game_start = False
+
 
 username_input_box = menue.TextInputBox(WIDTH/2, (HEIGHT/2) - 70, 400, font)
 input_group = pygame.sprite.Group(username_input_box)
@@ -100,8 +104,7 @@ def getPlayerID(socket_id):
 
 @sio.event
 def getHostID(host_id):
-    global is_host
-    global hostID
+    global is_host, hostID
     hostID = host_id
     if host_id == client_id:
         is_host = True
@@ -135,6 +138,16 @@ def playersConnected(data):
 
     print('Updated Users:', usernames)
 
+@sio.event
+def all_players_ready(data):
+    global canstart
+    canstart = data
+
+@sio.event
+def start():
+    global game_start
+    game_start = True
+
 
 # Gameloop für das Ausführen des Programms
 run = True
@@ -143,9 +156,12 @@ while run:
     timer.tick(fps)
 
     events = pygame.event.get()
+    mouseclick = False
     for event in events:
         if event.type == pygame.QUIT:
             run = False
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouseclick = True
 
 
     # Der User muss sich mit dem Server Connecten und ist somit im Login Screen.
@@ -156,7 +172,7 @@ while run:
         connect_button = menue.Button('Connect', WIDTH/2, HEIGHT/2, screen)
         connect_button.draw()
         # Prüft ob der User den Connect-Button gedrückt hat oder das Eingabefeld durch Enter bestätigt hat
-        if connect_button.button.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0] or username_input_box.enterpressed:
+        if connect_button.button.collidepoint(pygame.mouse.get_pos()) and mouseclick or username_input_box.enterpressed:
             connectmenue = False
             username_input_box.enterpressed = False
             username = username_input_box.text
@@ -208,8 +224,10 @@ while run:
 
         if offlinemode or is_host:
             start_button = menue.Button('Start', WIDTH/2, (HEIGHT/2) - 65, screen)
-        else:
+        elif not playerready:
             start_button = menue.Button('Ready', WIDTH/2, (HEIGHT/2) - 65, screen)
+        else:
+            start_button = menue.Button('Not Ready', WIDTH / 2, (HEIGHT / 2) - 65, screen)
         start_button.draw()
         settings_button = menue.Button('Settings', WIDTH / 2, HEIGHT / 2, screen)
         settings_button.draw()
@@ -217,26 +235,33 @@ while run:
         quit_button.draw()
 
         # Prüft die Betätigung der Hauptmenü-Buttons.
-        if start_button.button.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0]:
+        if start_button.button.collidepoint(pygame.mouse.get_pos()) and mouseclick or game_start:
             #with open("road3.py") as f:
                 #exec(f.read())
-            if resolution_dropdown.getSelected() is not None:
-                WIDTH = resolution_dropdown.getSelected()[0]
-                HEIGHT = resolution_dropdown.getSelected()[1]
-                screen = pygame.display.set_mode((WIDTH, HEIGHT))
-            if fullscreen_toggle.getValue() and resolution_dropdown.getSelected()[0] != 480:
-                screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
+            if canstart or len(client_ids) == 1 or game_start:
+                if resolution_dropdown.getSelected() is not None:
+                    WIDTH = resolution_dropdown.getSelected()[0]
+                    HEIGHT = resolution_dropdown.getSelected()[1]
+                    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+                if fullscreen_toggle.getValue() and resolution_dropdown.getSelected()[0] != 480:
+                    screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
+            #############################################################################################################################################
+            #############################################################################################################################################
+                gam.run(sio, offlinemode, client_id, client_ids, is_host, username)
+                game_start = False
+            #############################################################################################################################################
+            #############################################################################################################################################
+            elif not is_host:
+                sio.emit('player_ready', not playerready)
+                print("READY")
+                playerready = not playerready
 
-#############################################################################################################################################
-#############################################################################################################################################
-            gam.run(sio, offlinemode, client_id, client_ids, is_host, username)
-#############################################################################################################################################
-#############################################################################################################################################
-            
-        elif settings_button.button.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0] and events is not None:
+
+
+        elif settings_button.button.collidepoint(pygame.mouse.get_pos()) and mouseclick and not connectmenue:
             settingsactive = True
             menueactive = False
-        elif quit_button.button.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0]:
+        elif quit_button.button.collidepoint(pygame.mouse.get_pos()) and mouseclick:
             run = False
 
     if settingsactive:
