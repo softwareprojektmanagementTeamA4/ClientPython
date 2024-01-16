@@ -54,7 +54,7 @@ total_cars = 100                   # total number of cars on the road
 current_lap_time = 0               # current lap time
 last_lap_time = 0               # last lap time
 current_lap = 0
-maxlap = 3
+maxlap = 0
 path_background_sky = "background/sky.png"
 path_background_hills = "background/hills.png"
 path_background_trees = "background/trees.png"
@@ -66,6 +66,8 @@ nitro_recharging = False
 nitro_is_on = False
 place = 1
 finished_players = []
+game_finished = False
+
 
 #########################################################
 road_length = 500                 # length of our road
@@ -138,34 +140,39 @@ class GameWindow:
 
             # input handling
             keys = pygame.key.get_pressed()
-            if keys[pygame.K_LEFT]:     # drive left
-                playerX -= dx
-            if keys[pygame.K_RIGHT]:    # drive right
-                playerX += dx
+            global game_finished
+            if not game_finished:
+                if keys[pygame.K_LEFT]:     # drive left
+                    playerX -= dx
+                if keys[pygame.K_RIGHT]:    # drive right
+                    playerX += dx
 
-            playerX = playerX - (dx * speed_percent * player_segment['curve'] * centrifugal_force) # steering is harder when going around curves
+                playerX = playerX - (dx * speed_percent * player_segment['curve'] * centrifugal_force) # steering is harder when going around curves
 
-            if keys[pygame.K_UP]:       # go faster
-                speed = Util.accelerate(speed, accel, delta_time)
-            elif keys[pygame.K_DOWN]:   # slow down
-                speed = Util.accelerate(speed, breaking, delta_time)
-            else:                       # slow down if not pressing forward or backward
-                speed = Util.accelerate(speed, decel, delta_time)
+                if keys[pygame.K_UP]:       # go faster
+                    speed = Util.accelerate(speed, accel, delta_time)
+                elif keys[pygame.K_DOWN]:   # slow down
+                    speed = Util.accelerate(speed, breaking, delta_time)
+                else:                       # slow down if not pressing forward or backward
+                    speed = Util.accelerate(speed, decel, delta_time)
 
-            if keys[pygame.K_SPACE]:
-                if nitro <= 0:
-                    nitro_recharging = True
-                elif not nitro_recharging and speed > 0:
-                    nitro_is_on = True
-                    speed = Util.accelerate(speed, accel * 2.5, delta_time)  # 2,5x so schnell Beschleunigen
-                    nitro -= 1
+                if keys[pygame.K_SPACE]:
+                    if nitro <= 0:
+                        nitro_recharging = True
+                    elif not nitro_recharging and speed > 0:
+                        nitro_is_on = True
+                        speed = Util.accelerate(speed, accel * 2.5, delta_time)  # 2,5x so schnell Beschleunigen
+                        nitro -= 1
+                else:
+                    nitro_is_on = False
+                if nitro_recharging:
+                    nitro_is_on = False
+                    nitro += 0.0625 
+                    nitro = min(nitro, max_nitro) 
+                    nitro_recharging = nitro < max_nitro
             else:
-                nitro_is_on = False
-            if nitro_recharging:
-                nitro_is_on = False
-                nitro += 0.0625 
-                nitro = min(nitro, max_nitro) 
-                nitro_recharging = nitro < max_nitro
+                if keys[pygame.K_q]:
+                    self.game_is_loaded = False
             # Esc key to quit
             if keys[pygame.K_ESCAPE]:
                 pygame.quit()
@@ -520,6 +527,8 @@ class GameWindow:
                 for i, player in enumerate(finished_players):
                     race_finished_player_text = race_finished_player_font.render(str(i + 1) + "# " + player, True, 'white')
                     self.surface.blit(race_finished_player_text, (window_width / 3, window_height / 3 + i * 30))
+                global game_finished
+                game_finished = True
 
 
 ############################################################################################################
@@ -778,6 +787,127 @@ class GameWindow:
             global player_z
             global playerZ
             global resolution
+            global fps                      # how many updates per second
+            global step                       # how long is each frame
+            global window_width                 # logical window width
+            global window_height                 # logical window height
+            global centrifugal_force            # centrifugal force multiplier when going around curves
+            global offRoadDecel                 # speed multiplier when off road (e.g. you lose 2% speed each update frame)
+            global sky_speed                    # background sky layer scroll speed when going around curve (or up hill)
+            global hill_speed                  # background hill layer scroll speed when going around curve (or up hill)
+            global tree_speed                 # background tree layer scroll speed when going around curve (or up hill)
+            global sky_offset                     # current sky scroll offset
+            global hill_offset                   # current hill scroll offset
+            global tree_offset                   # current tree scroll offset
+            global segments                     # array of road segments
+            global cars                          # array of cars on the road
+            global npc_car_lock               # lock for adding cars to segments
+            global client_ids                  # dict of other players
+            global player_start_positions         # array of player cars
+            global player_car_lock            # lock for adding cars to segments
+            global player_cars                    # array of player cars
+            global player_num                     # player number
+            # background = None                # our background image (loaded below)
+            global  sprites                      # our spritesheet (loaded below)
+            global  resolution                   # scaling factor for multi-resolution support
+            global road_width                  # actually half the roads width, easier math if the road spans from -roadWidth to +roadWidth
+            global segment_length               # length of a single segment
+            global rumble_length                  # number of segments per red/white rumble strip
+            global track_length                 # z length of entire track (computed)
+            global lanes                          # number of lanes
+            global field_of_view                # angle (degrees) for field of view
+            global camera_height               # z height of camera
+            global camera_depth                 # z distance camera is from screen (computed)
+            global draw_distance                 # number of segments to draw
+            global playerX                       # player x offset from center of road (-1 to 1 to stay independent of roadWidth)
+            global playerZ                    # player relative z distance from camera (computed)
+            global fog_density                    # exponential fog density
+            global position                     # current camera Z position (add playerZ to get player's absolute Z position)
+            global speed                          # current speed
+            global max_speed    # top speed (ensure we can't move more than 1 segment in a single frame to make collision detection easier)
+            global accel               # acceleration rate - tuned until it 'felt' right
+            global breaking               # deceleration rate when braking
+            global decel                # 'natural' deceleration rate when neither accelerating, nor braking
+            global off_road_decel      # off road deceleration is somewhere in between
+            global off_road_limit       # limit when off road deceleration no longer applies (e.g. you can always go at least this speed even when off road)
+            global total_cars                    # total number of cars on the road
+            global current_lap_time               # current lap time
+            global  last_lap_time               # last lap time
+            global current_lap 
+            global maxlap 
+            global path_background_sky 
+            global path_background_hills 
+            global path_background_trees
+            global path_nitro_bottle 
+            global path_nitro_empty_bottle 
+            global max_nitro 
+            global nitro 
+            global nitro_recharging 
+            global nitro_is_on 
+            global place 
+            global finished_players 
+            global game_finished 
+            fps = 60                           # how many updates per second
+            step = 1/fps                       # how long is each frame
+            window_width = 1024                # logical window width
+            window_height = 768                # logical window height
+            centrifugal_force = 0.3            # centrifugal force multiplier when going around curves
+            offRoadDecel = 0.99                # speed multiplier when off road (e.g. you lose 2% speed each update frame)
+            sky_speed  = 0.001                  # background sky layer scroll speed when going around curve (or up hill)
+            hill_speed = 0.002                 # background hill layer scroll speed when going around curve (or up hill)
+            tree_speed = 0.003                 # background tree layer scroll speed when going around curve (or up hill)
+            sky_offset = 0                     # current sky scroll offset
+            hill_offset = 0                    # current hill scroll offset
+            tree_offset = 0                    # current tree scroll offset
+            segments = []                      # array of road segments
+            cars = []                          # array of cars on the road
+            npc_car_lock = Lock()              # lock for adding cars to segments
+            client_ids = {}                    # dict of other players
+            player_start_positions = []        # array of player cars
+            player_car_lock = Lock()           # lock for adding cars to segments
+            player_cars = {}                   # array of player cars
+            player_num = 1                     # player number
+            # background = None                # our background image (loaded below)
+            sprites = None                     # our spritesheet (loaded below)
+            resolution = None                  # scaling factor for multi-resolution support
+            road_width = 2000                  # actually half the roads width, easier math if the road spans from -roadWidth to +roadWidth
+            segment_length = 200               # length of a single segment
+            rumble_length = 3                  # number of segments per red/white rumble strip
+            track_length = None                # z length of entire track (computed)
+            lanes = 3                          # number of lanes
+            field_of_view = 100                # angle (degrees) for field of view
+            camera_height = 1000               # z height of camera
+            camera_depth = None                # z distance camera is from screen (computed)
+            draw_distance = 300                # number of segments to draw
+            playerX = 0                       # player x offset from center of road (-1 to 1 to stay independent of roadWidth)
+            playerZ = None                    # player relative z distance from camera (computed)
+            fog_density = 5                    # exponential fog density
+            position = 1                     # current camera Z position (add playerZ to get player's absolute Z position)
+            speed = 0                          # current speed
+            max_speed = segment_length/step    # top speed (ensure we can't move more than 1 segment in a single frame to make collision detection easier)
+            accel =  max_speed/5               # acceleration rate - tuned until it 'felt' right
+            breaking = -max_speed              # deceleration rate when braking
+            decel = -max_speed/5               # 'natural' deceleration rate when neither accelerating, nor braking
+            off_road_decel = -max_speed/2      # off road deceleration is somewhere in between
+            off_road_limit = max_speed/4       # limit when off road deceleration no longer applies (e.g. you can always go at least this speed even when off road)
+            total_cars = 100                   # total number of cars on the road
+            current_lap_time = 0               # current lap time
+            last_lap_time = 0               # last lap time
+            current_lap = 0
+            maxlap = 0
+            path_background_sky = "background/sky.png"
+            path_background_hills = "background/hills.png"
+            path_background_trees = "background/trees.png"
+            path_nitro_bottle = "media/nitro.png"
+            path_nitro_empty_bottle = "media/nitro_empty.png"
+            max_nitro = 100
+            nitro = 100
+            nitro_recharging = False
+            nitro_is_on = False
+            place = 1
+            finished_players = []
+            game_finished = False
+    
             camera_depth = 1 / math.tan((field_of_view/2) * math.pi/180)
             player_z = (camera_height * camera_depth)
             playerZ = (camera_height * camera_depth)
@@ -810,7 +940,7 @@ class GameWindow:
         reset()
         self.game_is_loaded = True
         # main game loop
-        while 1:
+        while self.game_is_loaded:
             self.clock.tick(fps)
             frame()
             endscreen()
