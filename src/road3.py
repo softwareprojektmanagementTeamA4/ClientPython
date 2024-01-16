@@ -54,7 +54,7 @@ total_cars = 100                   # total number of cars on the road
 current_lap_time = 0               # current lap time
 last_lap_time = 0               # last lap time
 current_lap = 0
-maxlap = 0
+maxlap = 3
 path_background_sky = "background/sky.png"
 path_background_hills = "background/hills.png"
 path_background_trees = "background/trees.png"
@@ -802,7 +802,7 @@ class GameWindow:
             global segments                     # array of road segments
             global cars                          # array of cars on the road
             global npc_car_lock               # lock for adding cars to segments
-            global client_ids                  # dict of other players
+
             global player_start_positions         # array of player cars
             global player_car_lock            # lock for adding cars to segments
             global player_cars                    # array of player cars
@@ -862,7 +862,7 @@ class GameWindow:
             segments = []                      # array of road segments
             cars = []                          # array of cars on the road
             npc_car_lock = Lock()              # lock for adding cars to segments
-            client_ids = {}                    # dict of other players
+
             player_start_positions = []        # array of player cars
             player_car_lock = Lock()           # lock for adding cars to segments
             player_cars = {}                   # array of player cars
@@ -894,7 +894,7 @@ class GameWindow:
             current_lap_time = 0               # current lap time
             last_lap_time = 0               # last lap time
             current_lap = 0
-            maxlap = 0
+            maxlap = 3
             path_background_sky = "background/sky.png"
             path_background_hills = "background/hills.png"
             path_background_trees = "background/trees.png"

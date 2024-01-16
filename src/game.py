@@ -34,6 +34,7 @@ username = None
 usernames = []
 client_ids = {}
 is_host = False
+hostID = 0
 
 road_width_slider = Slider(screen, WIDTH//2 - 150, (HEIGHT//2) - 75, 300, 20, min = 500, max = 3000, step=1, initial=2000)
 road_width_label = font.render('Road Width ', True, 'white')
@@ -100,6 +101,8 @@ def getPlayerID(socket_id):
 @sio.event
 def getHostID(host_id):
     global is_host
+    global hostID
+    hostID = host_id
     if host_id == client_id:
         is_host = True
     else:
@@ -184,8 +187,11 @@ while run:
             status = font.render('Connected to Server ', True, 'black')
             screen.blit(status, (0,0))
             i = 25
-            for users in usernames:
-                online = font.render(users + ' Online', True, 'green')
+            for userID, uservalue in client_ids.items():
+                if userID == hostID:
+                    online = font.render(uservalue + ' Online ' + 'Host', True, 'green')
+                else:
+                    online = font.render(uservalue + ' Online', True, 'green')
                 screen.blit(online, (0, i))
                 i += 25
         else:
@@ -200,7 +206,10 @@ while run:
                 connectmenue = True
                 username_input_box.enterpressed = True
 
-        start_button = menue.Button('Start', WIDTH/2, (HEIGHT/2) - 65, screen)
+        if offlinemode or is_host:
+            start_button = menue.Button('Start', WIDTH/2, (HEIGHT/2) - 65, screen)
+        else:
+            start_button = menue.Button('Ready', WIDTH/2, (HEIGHT/2) - 65, screen)
         start_button.draw()
         settings_button = menue.Button('Settings', WIDTH / 2, HEIGHT / 2, screen)
         settings_button.draw()
