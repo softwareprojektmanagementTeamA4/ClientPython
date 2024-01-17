@@ -19,8 +19,10 @@ fps = 60
 timer = pygame.time.Clock()
 font = pygame.font.SysFont('Georgia', 24 , bold=False)
 client_id = None
-background = pygame.image.load("media/backgroundRepeatable.png").convert_alpha()
+background = pygame.image.load("media/homescreen.jpg").convert_alpha()
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+gametitle = pygame.image.load("media/gametitle.png").convert_alpha()
+gametitle = pygame.transform.scale(gametitle, (WIDTH, HEIGHT / 3))
 
 connectmenue = True
 menueactive = False
@@ -151,10 +153,12 @@ def start():
     game_start = True
 
 
+
 # Gameloop für das Ausführen des Programms
 run = True
 while run:
     screen.blit(background,(0,0))
+    screen.blit(gametitle, (80, 0))
     timer.tick(fps)
 
     events = pygame.event.get()
