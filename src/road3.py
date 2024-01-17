@@ -525,6 +525,8 @@ class GameWindow:
                 race_finished_player_font = pygame.font.SysFont("freesansbold.ttf", (int) (36 * hud_scale))
                 race_finished_text = race_finished_font.render("RACE FINISHED", True, 'red')
                 self.surface.blit(race_finished_text, (window_width/3,window_height/4))
+                press_q_text = race_finished_player_font.render("Q Drücken um ins Hauptmenü zurückzukehren", True, 'red')
+                self.surface.blit(press_q_text, (window_width / 4, window_height / 5))
 
                 for i, player in enumerate(finished_players):
                     race_finished_player_text = race_finished_player_font.render(str(i + 1) + "# " + player, True, 'white')

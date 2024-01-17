@@ -224,8 +224,10 @@ while run:
                 connectmenue = True
                 username_input_box.enterpressed = True
 
-        if offlinemode or is_host:
+        if offlinemode or is_host and canstart:
             start_button = menue.Button('Start', WIDTH/2, (HEIGHT/2) - 65, screen, 'green')
+        elif offlinemode or is_host:
+            start_button = menue.Button('Start', WIDTH / 2, (HEIGHT / 2) - 65, screen, 'red')
         elif not playerready:
             start_button = menue.Button('Not Ready', WIDTH/2, (HEIGHT/2) - 65, screen, 'red')
         else:
