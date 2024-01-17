@@ -17,8 +17,10 @@ screen = pygame.display.set_mode([WIDTH, HEIGHT])
 pygame.display.set_caption('RaceGame')
 fps = 60
 timer = pygame.time.Clock()
-font = pygame.font.SysFont('Georgia', 24, bold=False)
+font = pygame.font.SysFont('Georgia', 24 , bold=False)
 client_id = None
+background = pygame.image.load("media/backgroundRepeatable.png").convert_alpha()
+background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 
 connectmenue = True
 menueactive = False
@@ -152,7 +154,7 @@ def start():
 # Gameloop für das Ausführen des Programms
 run = True
 while run:
-    screen.fill('blue')
+    screen.blit(background,(0,0))
     timer.tick(fps)
 
     events = pygame.event.get()
@@ -191,7 +193,7 @@ while run:
                 status = font.render('Connection failed ', True, 'red')
                 screen.blit(status, (connect_button.button.midleft[0], connect_button.button.midleft[1] - 15))
                 pygame.display.flip()
-                #pygame.time.delay(3000)
+                pygame.time.delay(1000)
                 menueactive = True
                 offlinemode = True
                 is_host = True
@@ -216,18 +218,18 @@ while run:
             reconnect_button = menue.Button('Reconnect', WIDTH / 2, (HEIGHT / 2) + 130, screen)
             reconnect_button.draw()
 
-            if reconnect_button.button.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0]:
+            if reconnect_button.button.collidepoint(pygame.mouse.get_pos()) and mouseclick:
                 menueactive = False
                 offlinemode = False
                 connectmenue = True
                 username_input_box.enterpressed = True
 
         if offlinemode or is_host:
-            start_button = menue.Button('Start', WIDTH/2, (HEIGHT/2) - 65, screen)
+            start_button = menue.Button('Start', WIDTH/2, (HEIGHT/2) - 65, screen, 'green')
         elif not playerready:
-            start_button = menue.Button('Ready', WIDTH/2, (HEIGHT/2) - 65, screen)
+            start_button = menue.Button('Not Ready', WIDTH/2, (HEIGHT/2) - 65, screen, 'red')
         else:
-            start_button = menue.Button('Not Ready', WIDTH / 2, (HEIGHT / 2) - 65, screen)
+            start_button = menue.Button('Ready', WIDTH / 2, (HEIGHT / 2) - 65, screen, 'green')
         start_button.draw()
         settings_button = menue.Button('Settings', WIDTH / 2, HEIGHT / 2, screen)
         settings_button.draw()
@@ -238,7 +240,7 @@ while run:
         if start_button.button.collidepoint(pygame.mouse.get_pos()) and mouseclick or game_start:
             #with open("road3.py") as f:
                 #exec(f.read())
-            if canstart or len(client_ids) == 1 or game_start:
+            if canstart or len(client_ids) <= 1 or game_start:
                 if resolution_dropdown.getSelected() is not None:
                     WIDTH = resolution_dropdown.getSelected()[0]
                     HEIGHT = resolution_dropdown.getSelected()[1]
@@ -298,8 +300,12 @@ while run:
             road3.fog_density = fog_density_slider.getValue()
             if lanes_dropdown.getSelected() is not None: road3.lanes = lanes_dropdown.getSelected()
             if resolution_dropdown.getSelected() is not None:
+                road3.hud_scale = resolution_dropdown.getSelected()[0] / road3.window_width
+                print(road3.hud_scale)
+                gam.font = pygame.font.SysFont('Georgia', (int) (24 * road3.hud_scale), bold=False)
                 road3.window_width = resolution_dropdown.getSelected()[0]
                 road3.window_height = resolution_dropdown.getSelected()[1]
+                gam.hud = pygame.Surface((road3.window_width, road3.window_height), pygame.SRCALPHA)
             menueactive = True
             settingsactive = False
 

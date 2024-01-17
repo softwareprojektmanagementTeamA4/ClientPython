@@ -54,7 +54,7 @@ total_cars = 100                   # total number of cars on the road
 current_lap_time = 0               # current lap time
 last_lap_time = 0               # last lap time
 current_lap = 0
-maxlap = 3
+maxlap = 0
 path_background_sky = "background/sky.png"
 path_background_hills = "background/hills.png"
 path_background_trees = "background/trees.png"
@@ -67,6 +67,7 @@ nitro_is_on = False
 place = 1
 finished_players = []
 game_finished = False
+hud_scale = 1
 
 
 #########################################################
@@ -486,32 +487,32 @@ class GameWindow:
             self.surface.blit(speed_hud_text, (0,0))
 
             last_lap_hud_text = self.font.render("Last Lap: " + str(round(last_lap_time, 2)) + " Sekunden", True, 'black')
-            self.surface.blit(last_lap_hud_text, (0,25))
+            self.surface.blit(last_lap_hud_text, (0,25 * hud_scale))
 
             lapcount_hud_text = self.font.render(str(current_lap) + "/4 Laps", True, 'black')
-            self.surface.blit(lapcount_hud_text, (0,50))
+            self.surface.blit(lapcount_hud_text, (0,50 * hud_scale))
 
             nitro_hud = nitro / 100
-            pygame.draw.rect(self.surface, pygame.Color(0, 0, 0), [295, 20, (50*10)+10, (10*4)+10], border_radius=5)
+            pygame.draw.rect(self.surface, pygame.Color(0, 0, 0), [295 * hud_scale, 20 * hud_scale, 510 * hud_scale, 50 * hud_scale], border_radius=5)
             if nitro_recharging:
-                pygame.draw.rect(self.surface, pygame.Color(255, 0, 0), [300, 25, (50*10)*nitro_hud, 10*4], border_radius=5)
+                pygame.draw.rect(self.surface, pygame.Color(255, 0, 0), [300 * hud_scale, 25 * hud_scale, (500*nitro_hud) * hud_scale , 40 * hud_scale], border_radius=5)
 
                 nitro_bottle = pygame.image.load(path_nitro_empty_bottle).convert_alpha()
-                nitro_bottle = pygame.transform.scale(nitro_bottle, (40 * 2.5, 13 * 2.5))
+                nitro_bottle = pygame.transform.scale(nitro_bottle, (40 * 2.5 * hud_scale, 13 * 2.5 * hud_scale))
                 nitro_bottle_rect = nitro_bottle.get_rect()
-                nitro_bottle_rect.bottomleft = ((295 + 550, 60))
+                nitro_bottle_rect.bottomleft = (((295 + 550) * hud_scale, 60 * hud_scale))
             else:
-                pygame.draw.rect(self.surface, pygame.Color(77, 187, 230), [300, 25, (50 * 10)*nitro_hud, 10 * 4], border_radius=5)
+                pygame.draw.rect(self.surface, pygame.Color(77, 187, 230), [300 * hud_scale, 25 * hud_scale, 500*nitro_hud * hud_scale, 40 * hud_scale], border_radius=5)
 
                 nitro_bottle = pygame.image.load(path_nitro_bottle).convert_alpha()
-                nitro_bottle = pygame.transform.scale(nitro_bottle, (40 * 2.5, 13 * 2.5))
+                nitro_bottle = pygame.transform.scale(nitro_bottle, (40 * 2.5 * hud_scale, 13 * 2.5 * hud_scale))
                 nitro_bottle_rect = nitro_bottle.get_rect()
-                nitro_bottle_rect.bottomleft = ((295 + 550, 60))
+                nitro_bottle_rect.bottomleft = (((295 + 550) * hud_scale, 60 * hud_scale))
             if not offlinemode:
                 global place
-                player_place_font = pygame.font.SysFont("freesansbold.ttf", 72)
+                player_place_font = pygame.font.SysFont("freesansbold.ttf", (int) (72 * hud_scale))
                 player_place_text = player_place_font.render(str(place) + ".", True, 'red')
-                self.surface.blit(player_place_text, (0, 100))
+                self.surface.blit(player_place_text, (0, 100 * hud_scale))
 
             self.surface.blit(nitro_bottle, nitro_bottle_rect)
 
@@ -520,8 +521,8 @@ class GameWindow:
                 if not username in finished_players:
                     finished_players.append(username)
 
-                race_finished_font = pygame.font.SysFont("freesansbold.ttf", 72)
-                race_finished_player_font = pygame.font.SysFont("freesansbold.ttf", 36)
+                race_finished_font = pygame.font.SysFont("freesansbold.ttf", (int) (72 * hud_scale))
+                race_finished_player_font = pygame.font.SysFont("freesansbold.ttf", (int) (36 * hud_scale))
                 race_finished_text = race_finished_font.render("RACE FINISHED", True, 'red')
                 self.surface.blit(race_finished_text, (window_width/3,window_height/4))
 
@@ -847,8 +848,35 @@ class GameWindow:
             global nitro_is_on 
             global place 
             global finished_players 
-            global game_finished 
+            global game_finished
 
+            segments = []
+            cars = []
+            npc_car_lock = Lock()
+            player_start_positions = []
+            player_car_lock = Lock()
+            player_cars = {}
+            sprites = None
+            track_length = None
+            playerX = 0
+            position = 1
+            speed = 0
+            max_speed = segment_length / step
+            accel = max_speed / 5
+            breaking = -max_speed
+            decel = -max_speed / 5
+            off_road_decel = -max_speed / 2
+            off_road_limit = max_speed / 4
+            current_lap_time = 0
+            last_lap_time = 0
+            current_lap = 0
+            max_nitro = 100
+            nitro = 100
+            nitro_recharging = False
+            nitro_is_on = False
+            place = 1
+            finished_players = []
+            game_finished = False
     
             camera_depth = 1 / math.tan((field_of_view/2) * math.pi/180)
             player_z = (camera_height * camera_depth)
@@ -879,7 +907,7 @@ class GameWindow:
         # Game.
         sprites = Game.load_images()
         reset()
-        sio.emit('game_start')
+        if not offlinemode: sio.emit('game_start')
         global player_num
         print("PLAYER NUMBER", player_num)
         self.game_is_loaded = True

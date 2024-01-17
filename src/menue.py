@@ -11,7 +11,7 @@ y: y Koordinate
 screen: Container/Leinwand auf dem der Button gezeichnet werden soll
 """
 class Button():
-    def __init__(self, txt, x, y, screen):
+    def __init__(self, txt, x, y, screen, color='light gray'):
         self.font = pygame.font.SysFont('Georgia', 24, bold=False)
         self.text = txt
         self.x = x
@@ -19,6 +19,7 @@ class Button():
         self.screen = screen
         self.button = pygame.rect.Rect(x,y,150,60)
         self.button.midbottom = (x,y)
+        self.color = color
 
     """
     def draw
@@ -26,7 +27,7 @@ class Button():
     Bei Aufruf wird der Button gezeichnet.
     """
     def draw(self):
-        btn = pygame.draw.rect(self.screen, 'light gray', self.button, 0, 5)
+        btn = pygame.draw.rect(self.screen, self.color, self.button, 0, 5)
         btnrand = pygame.draw.rect(self.screen, 'black', self.button, 5, 5)
         surf = self.font.render(self.text, True, 'black')
         self.screen.blit(surf, (self.button.midleft[0] + 25, self.button.midleft[1] - 15))
