@@ -276,8 +276,6 @@ while run:
 
         # Prüft die Betätigung der Hauptmenü-Buttons.
         if start_button.button.collidepoint(pygame.mouse.get_pos()) and mouseclick or game_start:
-            #with open("road3.py") as f:
-                #exec(f.read())
             if canstart or len(client_ids) <= 1 or game_start:
                 if resolution_dropdown.getSelected() is not None:
                     WIDTH = resolution_dropdown.getSelected()[0]
@@ -285,8 +283,7 @@ while run:
                     screen = pygame.display.set_mode((WIDTH, HEIGHT))
                 if fullscreen_toggle.getValue() and resolution_dropdown.getSelected()[0] != 480:
                     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
-            #############################################################################################################################################
-            #############################################################################################################################################
+
                 gam.run(sio, offlinemode, client_id, client_ids, is_host, username)
                 game_start = False
                 playerready = False
@@ -295,11 +292,8 @@ while run:
                 sio.emit('player_ready', playerready)
                 sio.emit('updateUserList')
 
-            #############################################################################################################################################
-            #############################################################################################################################################
             elif not is_host:
                 sio.emit('player_ready', not playerready)
-                print("READY")
                 playerready = not playerready
 
         elif settings_button.button.collidepoint(pygame.mouse.get_pos()) and mouseclick and not connectmenue:
