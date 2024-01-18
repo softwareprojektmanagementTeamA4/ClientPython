@@ -124,6 +124,8 @@ class GameWindow:
             Update current game state
             """
             global position, speed, playerX, playerZ, sky_offset, hill_offset, tree_offset, max_nitro, nitro, nitro_recharging, nitro_is_on
+            global client_ids
+
             player_segment = find_segment(position + playerZ)
             playerW = sprite_list['1_PLAYER_STRAIGHT']['w'] * SPRITE_SCALE
             speed_percent = speed/max_speed
@@ -173,7 +175,10 @@ class GameWindow:
                     nitro_recharging = nitro < max_nitro
             else:
                 if keys[pygame.K_q]:
-                    self.game_is_loaded = False
+                    if (len(finished_players) == len(player_start_positions)):
+                        self.game_is_loaded = False
+
+
             # Esc key to quit
             if keys[pygame.K_ESCAPE]:
                 pygame.quit()
@@ -219,7 +224,6 @@ class GameWindow:
             speed = Util.limit(speed, 0, max_speed) # or exceed maxSpeed
             if not offlinemode:
                 send_data()
-                global client_ids
 
             if position > playerZ:
                 global current_lap_time, last_lap_time, current_lap
@@ -257,6 +261,15 @@ class GameWindow:
             for i in order:
                 if i['id'] == id:
                     place = order.index(i) + 1
+
+        @sio.event()
+        def playersConnected(data):
+            """
+            Receive data from server
+            """
+            global client_ids
+            client_ids = data
+            print(client_ids)
 
         @sio.event()
         def receive_npc_car_data(data):

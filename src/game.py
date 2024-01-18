@@ -157,6 +157,7 @@ def start():
 # Gameloop für das Ausführen des Programms
 run = True
 while run:
+
     screen.blit(background,(0,0))
     screen.blit(gametitle, (80, 0))
     timer.tick(fps)
@@ -192,6 +193,7 @@ while run:
             if sio.connected:
                 menueactive = True
                 offlinemode = False
+                mouseclick = False
             else:
                 screen.fill('light blue')
                 status = font.render('Connection failed ', True, 'red')
@@ -201,6 +203,7 @@ while run:
                 menueactive = True
                 offlinemode = True
                 is_host = True
+                mouseclick = False
                 events = None
     # Der User ist im Hauptmenü.
     if menueactive:
@@ -226,9 +229,10 @@ while run:
                 menueactive = False
                 offlinemode = False
                 connectmenue = True
+                mouseclick = False
                 username_input_box.enterpressed = True
 
-        if offlinemode or is_host and canstart:
+        if offlinemode or len(client_ids) <=1 or is_host and canstart:
             start_button = menue.Button('Start', WIDTH/2, (HEIGHT/2) - 65, screen, 'green')
         elif offlinemode or is_host:
             start_button = menue.Button('Start', WIDTH / 2, (HEIGHT / 2) - 65, screen, 'red')
@@ -257,6 +261,13 @@ while run:
             #############################################################################################################################################
                 gam.run(sio, offlinemode, client_id, client_ids, is_host, username)
                 game_start = False
+                playerready = False
+                canstart = False
+                mouseclick = False
+                sio.emit('player_ready', playerready)
+                print("bitte")
+                sio.emit('updateUserList')
+
             #############################################################################################################################################
             #############################################################################################################################################
             elif not is_host:
@@ -264,11 +275,10 @@ while run:
                 print("READY")
                 playerready = not playerready
 
-
-
         elif settings_button.button.collidepoint(pygame.mouse.get_pos()) and mouseclick and not connectmenue:
             settingsactive = True
             menueactive = False
+            mouseclick = False
         elif quit_button.button.collidepoint(pygame.mouse.get_pos()) and mouseclick:
             run = False
 
