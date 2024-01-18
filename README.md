@@ -28,7 +28,7 @@ Ist eine weitere Hilfsklasse die folgende Klassen definiert:
 - Render: Enthält Methoden zum Rendern von Sprites auf dem Bildschirm oder die Darstellung von Straßensegmenten als Polygone. Dabei gibt es auch Funktionen, die jeweils die Sprites noch entsprechend skalieren.
 
 ### Road3.py
-In der Road.py passiert der Hauptteil des tatsächlichen Spiels. Hier befindet sich die Hauptschleife in dem das Rennen stattfindet. Sie besteht aus mehreren Abschnitten. Am Anfang werden wichtige imports und Variablen bestimmt. In der Klasse GameWindow läuft das Spiel ab. Die Road3 nutzt Pygame für das darstellen und die Inputs des Spiels.
+In der Road.py befindet sich die Logik für das Rennen. Dazu gehört die Hauptschleife in dem das Rennen stattfindet. Sie besteht aus mehreren Abschnitten. Am Anfang werden wichtige imports und Variablen bestimmt. In der Klasse GameWindow läuft das Spiel ab. Die Road3 nutzt Pygame für das darstellen und die Inputs des Spiels.
 Wichtige Methoden sind:
 
 Über die Runmethode wird das Spiel gestartet. Die Game.py gibt ihr wichtige Parameter, wie die Socketverbindung und den online- bzw. offlinemodus mit.
