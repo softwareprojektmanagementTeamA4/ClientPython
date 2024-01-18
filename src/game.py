@@ -157,6 +157,7 @@ def start():
 # Gameloop für das Ausführen des Programms
 run = True
 while run:
+
     screen.blit(background,(0,0))
     screen.blit(gametitle, (80, 0))
     timer.tick(fps)
@@ -257,6 +258,13 @@ while run:
             #############################################################################################################################################
                 gam.run(sio, offlinemode, client_id, client_ids, is_host, username)
                 game_start = False
+
+                playerready = False
+                canstart = False
+                sio.emit('player_ready', playerready)
+                print("bitte")
+                sio.emit('updateUserList')
+
             #############################################################################################################################################
             #############################################################################################################################################
             elif not is_host:
