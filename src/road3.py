@@ -77,6 +77,7 @@ road_length = 500                 # length of our road
 # TODO: implement hud
 
     
+# GameWindow is the main class for the game
 class GameWindow:
     def __init__(self):
         self.global_delta_time = 0
@@ -283,6 +284,9 @@ class GameWindow:
 
 
         def update_cars(delta_time, player_segment, player_w):
+            """
+            Update the npc cars positions
+            """
             for n in range(len(cars)):
                 car = cars[n]
                 old_segment = find_segment(car['z'])
@@ -296,6 +300,9 @@ class GameWindow:
                     new_segment['cars'].append(car)
 
         def update_car_offset(car, car_segment, player_segment, player_w):
+            """
+            Update the offset of the npc cars
+            """
             lookahead = 20
             carW = car['sprite'][1]['w'] * SPRITE_SCALE
             dir = 0
@@ -318,6 +325,7 @@ class GameWindow:
                     
                     return dir * 1/i * (car['speed'] - speed)/max_speed # the closer the cars (smaller i) and the greated the speed ratio, the larger the offset
 
+                # Cars overtake each other
                 for j in range(len(segment['cars'])):
                     otherCar = segment['cars'][j]
                     otherCarW = otherCar['sprite'][1]['w'] * SPRITE_SCALE
@@ -402,7 +410,9 @@ class GameWindow:
                 segment = segments[(base_segment['index'] + n) % len(segments)]
 
                 while True:
+                    # Mutex lock because of parallel acces inside of the serverevents
                     npc_car_lock.acquire()
+                    # Render cars
                     for i in range(len(segment['cars'])):
                         car          = segment['cars'][i]
                         sprite       = sprites[car['sprite'][0]]
@@ -412,6 +422,7 @@ class GameWindow:
                         Render.sprite(self.surface, window_width, window_height, resolution, road_width, sprite, sprite_scale, spriteX, spriteY, -0.5, -1, segment['clip'])
                     npc_car_lock.release()
                     break
+                # Render Sprites on the road
                 for i in range(len(segment['sprites'])):
                     sprite       = sprites[(segment['sprites'][i]['source'][0])]
                     sprite_scale = segment['p1']['screen']['scale']
@@ -478,6 +489,9 @@ class GameWindow:
             hudupdate()
 
         def hudupdate():
+            """
+            Update the hud with the current game state
+            """
             pygame.draw.rect(self.hud, pygame.Color(255, 0, 0, 75), [0, 0, window_width, window_height/8])
             self.surface.blit(self.hud, (0,0))
 
@@ -490,6 +504,7 @@ class GameWindow:
             lapcount_hud_text = self.font.render(str(current_lap) + "/4 Laps", True, 'black')
             self.surface.blit(lapcount_hud_text, (0,50 * hud_scale))
 
+            # Update the Nitro HUD
             nitro_hud = nitro / 100
             pygame.draw.rect(self.surface, pygame.Color(0, 0, 0), [295 * hud_scale, 20 * hud_scale, 510 * hud_scale, 50 * hud_scale], border_radius=5)
             if nitro_recharging:
@@ -515,6 +530,9 @@ class GameWindow:
             self.surface.blit(nitro_bottle, nitro_bottle_rect)
 
         def endscreen():
+            """
+            Show the endscreen after finishing the game
+            """
             if current_lap > maxlap:
                 if not username in finished_players:
                     finished_players.append(username)
@@ -721,6 +739,10 @@ class GameWindow:
 
         # rest start position
         def reset_player_start_positions():
+            """
+            Calculate start positions for each player.
+            This method is only called by the host
+            """
             global player_start_positions
             player_start_positions = []
             offset = -0.6
@@ -738,7 +760,7 @@ class GameWindow:
         @sio.event()
         def receive_start_position(data):
             """
-            Receive starposition
+            Receive starposition and player number from server
             """
             global player_start_positions
             global playerX
@@ -753,6 +775,9 @@ class GameWindow:
             player_start_positions = data
         
         def reset_cars():
+            """
+            Reset and setup npc cars with random values
+            """
             global cars
             cars = []
             for n in range(total_cars):
@@ -766,7 +791,11 @@ class GameWindow:
             put_cars_into_segments()
 
         def put_cars_into_segments():
+            """
+            Put the npc cars into the segments using their z position
+            """
             while True:
+                # Mutex lock because of parallel acces inside of the serverevents
                 npc_car_lock.acquire()
                 for n in range(len(segments)):
                     segments[n]['cars'] = []
@@ -779,6 +808,9 @@ class GameWindow:
                 break
 
         def reset():
+            """
+            Reset the entire game state to the initial values
+            """
 
             global camera_depth
             global player_z
@@ -878,6 +910,7 @@ class GameWindow:
             playerZ = (camera_height * camera_depth)
             resolution = window_height / 480
           
+            # Reset road, sprites and start positions
             if len(segments) == 0:
                 reset_road()
                 reset_sprites()
