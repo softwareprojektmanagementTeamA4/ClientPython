@@ -10,6 +10,7 @@ from pygame_widgets.dropdown import Dropdown
 from pygame_widgets.toggle import Toggle
 pygame.init()
 
+# Setup
 gam = road3.GameWindow()
 WIDTH = 1024
 HEIGHT = 768
@@ -44,6 +45,7 @@ client_ids = {}
 is_host = False
 hostID = 0
 
+# Settings
 road_width_slider = Slider(screen, WIDTH//2 - 150, (HEIGHT//2) - 75, 300, 20, min = 500, max = 3000, step=1, initial=2000)
 road_width_label = font.render('Road Width ', True, 'white')
 road_width_output = TextBox(screen, road_width_slider.getX() + road_width_label.get_width(), road_width_slider.getY() - 40, 45, 30, fontSize=15)
@@ -99,15 +101,24 @@ SockeIO Eventhandler
 """
 @sio.event
 def connect():
+    """
+    This method is called by the server to inform the client about a successful connection
+    """
     print("I'm connected! ")
 
 @sio.event
 def getPlayerID(socket_id):
+    """
+    This event is called by the server to send the current client id to the client
+    """
     global client_id
     client_id = socket_id
 
 @sio.event
 def getHostID(host_id):
+    """
+    This event is called by the server to send the current host id to the client
+    """
     global is_host, hostID
     hostID = host_id
     if host_id == client_id:
@@ -117,10 +128,16 @@ def getHostID(host_id):
 
 @sio.event
 def connect_error(data):
+    """
+    This event is called when a connection error occurs.
+    """
     print("The connection failed!")
 
 @sio.event
 def disconnect():
+    """
+    This event is called when the server disconnects the client
+    """
     print("I'm disconnected!")
     global menueactive
     global connectmenue
@@ -129,6 +146,10 @@ def disconnect():
 
 @sio.event()
 def playersConnected(data):
+    """
+    This event is called when a new player connects to the server. \n
+    The client saves usernames and clientids
+    """
     print("PLAYER CONNECTED")
     global usernames
     global client_id
@@ -144,11 +165,17 @@ def playersConnected(data):
 
 @sio.event
 def all_players_ready(data):
+    """
+    Server sends this event when all players are ready
+    """
     global canstart
     canstart = data
 
 @sio.event
 def start():
+    """
+    Start the game when the server sends start event
+    """
     global game_start
     game_start = True
 
@@ -162,6 +189,7 @@ while run:
     screen.blit(gametitle, (80, 0))
     timer.tick(fps)
 
+    # Eventlistener
     events = pygame.event.get()
     mouseclick = False
     for event in events:
@@ -265,7 +293,6 @@ while run:
                 canstart = False
                 mouseclick = False
                 sio.emit('player_ready', playerready)
-                print("bitte")
                 sio.emit('updateUserList')
 
             #############################################################################################################################################
