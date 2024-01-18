@@ -76,15 +76,6 @@ road_length = 500                 # length of our road
 
 # TODO: implement hud
 
-# class Segment:
-#     """
-#     Segment of road
-#     """
-#     def __init__(self, index, p1, p2, color):
-#         self.index = index
-#         self.p1 = p1
-#         self.p2 = p2
-#         self.color = color
     
 class GameWindow:
     def __init__(self):
@@ -443,9 +434,6 @@ class GameWindow:
                             if segment == other_player_segment:
                                 other_player_num = player_cars[player]['player_num']
                                 car_percent = Util.percent_remaining(player_cars[player]['position'] + playerZ, segment_length)
-                                # place = 1
-                                # if player_cars[player]['position'] > position and player_cars[player]['current_lap'] >= current_lap:
-                                #     place += 1
                                 if player_cars[player]['nitro']:
                                     sprite = sprites[f'{other_player_num}_PLAYER_STRAIGHT_NITRO']
                                 else:
@@ -483,9 +471,6 @@ class GameWindow:
             self.delta_time = min(1, (self.time_now - self.last_time) / 1000)
             self.global_delta_time += self.delta_time
 
-            # while (self.global_delta_time > step):
-            #     self.global_delta_time -= step
-            #     update(step)
             update(step)
 
             render()
