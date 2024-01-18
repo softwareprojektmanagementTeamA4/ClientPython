@@ -175,7 +175,7 @@ class GameWindow:
                     nitro_recharging = nitro < max_nitro
             else:
                 if keys[pygame.K_q]:
-                    if (len(finished_players) == len(client_ids)):
+                    if (len(finished_players) == len(player_start_positions)):
                         self.game_is_loaded = False
 
 
