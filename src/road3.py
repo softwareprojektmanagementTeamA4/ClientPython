@@ -705,11 +705,6 @@ class GameWindow:
             add_sprite(len(segments) - 25, ('BILLBOARD07', sprite_list['BILLBOARD07']), -1.2)
             add_sprite(len(segments) - 25, ('BILLBOARD06', sprite_list['BILLBOARD06']),  1.2)
 
-            #for n in range(250, 1000, 50):
-            #    add_sprite(n, ('COLUMN', sprite_list['COLUMN']), 1.1)
-            #    add_sprite(n + Util.random_int(0,5), ('TREE1', sprite_list['TREE1']), -1 - (random.random() * 2))
-            #   add_sprite(n + Util.random_int(0,5), ('TREE2', sprite_list['TREE2']), -1 - (random.random() * 2))
-
             for n in range(250, 1000, 50):
                 offset = n // 50
                 value1 = n + (offset % 6)
@@ -719,11 +714,6 @@ class GameWindow:
                 add_sprite(n + value1, ('TREE1', sprite_list['TREE1']), value2)
                 add_sprite(n, ('TREE2', sprite_list['TREE2']), -1 if n % 2 == 0 else 1)
 
-
-            #for n in range(200, len(segments), 30):
-            #   random_key = Util.random_key(sprite_list_plants)
-            #    add_sprite(n, (random_key, sprite_list[random_key]), Util.random_choice([-1,1]) * (2 + random.random() * 5))
-
             for n in range(200, len(segments), 30):
                 key_index = n % len(sprite_list_plants)
                 key = list(sprite_list_plants.keys())[key_index]
@@ -731,19 +721,8 @@ class GameWindow:
                 offset2 = 2 + (n // 30) % 5  # Intervall von [2, 7]
                 add_sprite(n, (key, sprite_list[key]), offset1 * offset2)
 
-
-            #for n in range(1000, len(segments)-50, 500):
-            #    side = Util.random_choice([1, -1])
-            #    random_key = Util.random_key(sprite_list_billboards)
-            #    add_sprite(n + Util.random_int(0, 50), (random_key, sprite_list[random_key]), -side * (1.5 + random.random()))
-            #    for i in range(20):
-            #        random_key = Util.random_key(sprite_list_plants)
-            #        sprite = (random_key, sprite_list[random_key])
-            #        offset = side * (1.5 + random.random())
-            #        add_sprite(n + Util.random_int(0, 50), sprite, offset)
-
             for n in range(1000, len(segments)-50, 500):
-                side = (((n // 500) % 2) * 2) - 1 # [-1, 1]
+                side = (((n // 500) % 2) * 2) - 1  # [-1, 1]
                 key_index = n % len(sprite_list_billboards)
                 key = list(sprite_list_billboards.keys())[key_index]
 
