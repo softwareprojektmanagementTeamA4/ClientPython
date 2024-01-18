@@ -124,8 +124,8 @@ def disconnect():
     print("I'm disconnected!")
     global menueactive
     global connectmenue
-    menueactive = False
-    connectmenue = True
+    menueactive = True
+    connectmenue = False
 
 @sio.event()
 def playersConnected(data):
